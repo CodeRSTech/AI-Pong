@@ -119,8 +119,6 @@ class PlayZone:
         """
         ball.flip_y()
         skew_ball_direction(ball, paddle, is_cpu=player_is_cpu)
-        # TODO: Have ball store hit count, last hit by CPU/player etc.
-        #  If ball was last hit by CPU, player ought to score MORE.
         if not player_is_cpu:
             self.ai_player.scores['hits'] += 1
             ball.last_hit_by_player = True

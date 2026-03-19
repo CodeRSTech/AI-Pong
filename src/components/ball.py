@@ -24,7 +24,6 @@ class Ball(Rectangle):
         """
         super().__init__(left, top, width, height)
         self.speed = Vec2(0, 0)
-        # TODO: Have ball store hit count, last hit by CPU/player,
         self.hits = 0
         self.last_hit_by_cpu = False
         self.last_hit_by_player = False
