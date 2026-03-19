@@ -3,20 +3,21 @@
 Genetic Algorithm core: selection, crossover, mutation, and population management.
 """
 
-import pickle
 import random
+from copy import deepcopy
 
-from game import Game
-from ga.player import IndividualPlayer
-from utils.logger import logger
-from utils.functions import two_point_crossover
-
+from src.ga.player import IndividualPlayer
+from src.game import Game
+from src.utils.functions import two_point_crossover
+from src.utils.logger import logger
 
 class GeneticAlgorithm:
     """
     A class representing core functionality of the Genetic Algorithm.
     """
+    # Elite factor decides what percentage of top individuals will be retained onto the next gen.
     elite_factor = 0.1
+    # Crossover rate determines what percentage of individuals will join the mating pool.
     crossover_rate = 0.4
 
     def __init__(self, population: list[IndividualPlayer]):
@@ -29,24 +30,35 @@ class GeneticAlgorithm:
     def start(self, runs=1000) -> None:
         """
         Run the Genetic Algorithm for a given number of generations.
+
+        For each generation, 3 key steps are executed:
+
+        - Selection,
+        - Crossover and,
+        - Mutation.
         """
-        logger.info("Starting GA...")
+        logger.info("Starting GA... \n"
+                    "will run for upto {0} generations.".format(runs))
+        # TODO: the `i` variable here, referred to as `gen_idx` in `selection` method,
+        #  `calculate_fitness` method and, finally, `save_generation_samples`.
+        #  This appears to be unnecessary and thus requires rectification.
         for i in range(runs):
             logger.info("Generation: {0}, Population: {1}".format(i, self.population_size))
-            self.selection(i)  # <-- Pass the generation index 'i' here
+            self.selection(i)
             offsprings = self.crossover()
             self.mutate_and_append_to_population(offsprings)
 
     def selection(self, gen_idx: int) -> None:
         """
-        Run one epoch/game, evaluate, and prepare the next generation.
+        Run game for one generation, evaluate individual fitness, and prepare the next generation.
         """
         self.epoch()
         logger.info("Performing selection...")
         try:
-            self.calculate_fitness(gen_idx)  # <-- Pass it here
+            self.calculate_fitness(gen_idx)
             self.cull_population()
             self.repopulate()
+        # FIXME: Too broad exception clause
         except LookupError as e:
             logger.error("LookupError: {0}".format(e))
             exit(0)
@@ -71,30 +83,52 @@ class GeneticAlgorithm:
         Calculate fitness for every player and persist the elite.
         """
         logger.info("Calculating fitness...")
-        for player in self.population:
-            player.calculate_fitness()
+        try:
+            for player in self.population:
+                player.calculate_fitness()
+        except KeyError as e:
+            logger.opt(exception=e).critical("CRITICAL ERROR: \n"
+                                             "The GA ran into an error while calculating the fitness.\n"
+                                             "Most likely a certain score value (hits, wins, etc.) was NOT read.\n"
+                                             "Check if whether the program is reading/setting the score with the "
+                                             "same keys.")
+            exit(-1)
 
         self.population = sorted(self.population,
                                  key=lambda player_i: player_i.scores['fitness'],
                                  reverse=True)
 
+        # TODO: Make this method get `gen_idx` from parent class (i.e. self),
+        #  rather than having to pass it down through multiple parent methods.
         self.save_generation_samples(gen_idx)  # <-- Call the new save method
         self.print_scores()
 
     def cull_population(self) -> None:
-        fittest = self.population[0]
-        num_elites = int(len(self.population) * self.elite_factor)
-        elites = self.population[:num_elites]
+        population = self.population
+        # Get the fittest individual...
+        # Since fitness is calculated AND,
+        # population is sorted by fitness in decreasing order,
+        # the fittest individual lies at index 0 while,
+        # the weakest individual lies at the last index, i.e. -1 .
+        fittest = population[0]
+        weakest = population[-1]
+
+        # Get elites (top players)
+        num_elites = int(len(population) * self.elite_factor)
+        elites = population[:num_elites]
         logger.info("Elite players chosen: {0}".format(num_elites))
 
-        max_score = fittest.scores['fitness']
-        min_score = self.population[-1].scores['fitness']
-
+        max_score = fittest.get_fitness()
+        min_score = weakest.get_fitness()
         score_range = max_score - min_score
 
-        survivors = elites
-        for player in self.population:
-            player_score = player.scores['fitness']
+        # NEW!!! elites are now kept as a deep copy
+        survivors = (deepcopy(elites) +
+                     deepcopy(elites) +
+                     deepcopy(elites))
+
+        for player in population:
+            player_score = player.get_fitness()
 
             # Shift scores safely
             if score_range > 0:
@@ -113,20 +147,21 @@ class GeneticAlgorithm:
         Adds if short; trims if over (removes worst at the tail).
         """
         logger.info("Repopulating population...")
-        target = self.population_size
-        current = len(self.population)
-        logger.debug("Target population size is {0}, current size is {1}".format(target, current))
+        population = self.population
+        target_size = self.population_size
+        current_size = len(population)
+        logger.debug("Target population size is {0}, current size is {1}".format(target_size, current_size))
 
-        if current < target:
+        if current_size < target_size:
             logger.info("Adding new pupils...")
-            need = target - current
+            need = target_size - current_size
             for _ in range(need):
                 new_pupil = IndividualPlayer()
-                self.population.append(new_pupil)
-        elif current > target:
+                population.append(new_pupil)
+        elif current_size > target_size:
             logger.info("Removing the worst...")
             # Trim excess (assumes population is already sorted by fitness descending)
-            del self.population[target:]
+            del population[target_size:]
 
     def crossover(self) -> list:
         """
@@ -145,12 +180,20 @@ class GeneticAlgorithm:
         random.shuffle(mating_pool)
 
         for i in range(0, len(mating_pool), 2):
-            parent_1, parent_2 = mating_pool[i], mating_pool[i+1]
-            offspring1 = two_point_crossover(parent_1, parent_2)
-            offspring2 = two_point_crossover(parent_2, parent_1)
-            offsprings.extend([offspring1, offspring2])
+            try:
+                parent_1, parent_2 = mating_pool[i], mating_pool[i+1]
+            except IndexError:
+                logger.opt(exception=True).error("CRITICAL ERROR:\n"
+                                                 "Index error occurred while attempting to crossover.\n"
+                                                 "Are there sufficient individuals in the mating pool?"
+                                                 " (current mating pool size = {0}.".format(len(mating_pool)))
+                exit(-1)
+            else:
+                offspring1 = two_point_crossover(parent_1, parent_2)
+                offspring2 = two_point_crossover(parent_2, parent_1)
+                offsprings.extend([offspring1, offspring2])
 
-        logger.debug("Number of  Offsprings {0}".format(len(offsprings)))
+        logger.debug("Number of Offsprings: {0}".format(len(offsprings)))
         return offsprings
 
     def mutate_and_append_to_population(self, offsprings: list[IndividualPlayer]) -> None:
@@ -184,6 +227,5 @@ class GeneticAlgorithm:
         """
         Print scores of the current generation.
         """
-        #for i in range(len(self.population)):
-        #    print("Player {0} : {1}".format(i, self.population[i].fit_scores))
-        print("Scores : {0}, Elite player age = {1}".format(self.population[0].scores, self.population[0].age))
+        for i in range(1):
+            print(f"P{i}: {self.population[i].get_scores()}\n")

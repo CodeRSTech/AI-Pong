@@ -6,9 +6,7 @@ This module keeps simulation in y-down space (origin top-left). Rendering
 converts to y-up in draw calls of each entity.
 """
 
-from random import randint
-
-from utils.functions import skew_ball_direction, create_paddle, create_ball, timeit
+from utils.functions import skew_ball_direction, create_paddle, create_ball
 
 
 class PlayZone:
@@ -20,6 +18,8 @@ class PlayZone:
     Updates by letting the ball, cpu paddle and player paddle make their moves
     and handling collisions. Updates the scores.
     """
+    # TODO: correlate with pre-set magnitude of ball speed
+    ball_speed_magnitude = 5.0
 
     def __init__(self, width, height, speed, ai_player, best_ai_fitness=0):
         """
@@ -34,19 +34,19 @@ class PlayZone:
         self.WIDTH = width
         self.HEIGHT = height
         self.speed = speed
+
+        self.ball = create_ball()
+        self.cpu_paddle = create_paddle(width, height, self.ball.color, is_cpu=True)
+        self.ai_paddle = create_paddle(width, height, self.ball.color)
         self.ai_player = ai_player
         self.best_ai_fitness = best_ai_fitness
-        self.ball = create_ball()
-        self.ai_paddle = create_paddle(width, height, self.ball.color)
-        self.cpu_paddle = create_paddle(width, height, self.ball.color, is_cpu=True)
 
         self.respawn_ball(self.ball)
 
     def update(self) -> None:
         """
-        Advance simulation one step: AI, CPU, collisions, and state sync.
+        Advance simulation one step: CPU, collisions, and state sync.
         """
-        self.player_move()
         self.cpu_move()
         self.check_collisions()
         self.update_variables()
@@ -55,26 +55,27 @@ class PlayZone:
         """
         Move the CPU paddle to track the ball when ball is moving upwards.
         """
+        # FIXME: This CPU Move logic is rather flawed...
+        #  ideally, the paddle moves faster when ball is in close proximity.
+        #  otherwise the paddle just procrastinates and moves slowly.
+
+        # TODO: revisit original, base version and see how the CPU Move implementation differs.
+        #  After that, re-integrate that into this version.
         cpu_paddle = self.cpu_paddle
         ball = self.ball
 
         # Only react if ball is heading towards the CPU (top in y-down space)
+
         if ball.speed.y < 0:
             distance = ball.pos_x - cpu_paddle.pos_x
             # Choose a capped step based on distance
-            max_step = 6.0  # CPU skill
+            max_step = self.speed  # CPU skill
             step = max(-max_step, min(max_step, distance * 0.1))
             cpu_paddle.pos_x += step
 
             # Clamp to visible bounds using center coordinates
             half = cpu_paddle.width / 2.0
             cpu_paddle.pos_x = max(half, min(self.WIDTH - half, cpu_paddle.pos_x))
-
-    def player_move(self) -> None:
-        """
-        Move the AI player using its neural network.
-        """
-        self.ai_player.execute_move(zone=self)
 
     def check_collisions(self) -> None:
         """
@@ -92,24 +93,20 @@ class PlayZone:
         # Bottom border crossed, player paddle missed: CPU +1
         if ball.bottom > zone.HEIGHT:
             zone.ai_player.scores['CPU'] += 1
-            # If ball was last hit by CPU, CPU ought to score DOUBLE?.
-            if ball.last_hit_by_cpu:
-                zone.ai_player.scores['CPU'] += 1
             zone.respawn_ball(ball)
-            zone.ai_player.reset_streak()
+            zone.ai_player.reset_winning_streak()
 
         # Top border crossed, CPU paddle missed: Player +1
         elif ball.top < 0:
             zone.ai_player.scores['Player'] += 1
-            # If ball was last hit by player, player ought to score DOUBLE?.
-            if ball.last_hit_by_player:
-                zone.ai_player.scores['Player'] += 1
-                zone.ai_player.add_streak()  # streak only if player actually touched the ball
             zone.respawn_ball(ball)
+            zone.ai_player.add_win_to_streak()
+
 
         # Paddle collisions
         if self.ball.colliderect(self.ai_paddle):
             self.handle_collision(self.ball, self.ai_paddle)
+
         if self.ball.colliderect(self.cpu_paddle):
             self.handle_collision(self.ball, self.cpu_paddle, player_is_cpu=True)
 
@@ -117,16 +114,17 @@ class PlayZone:
         """
         Respond to ball hitting a paddle: bounce and skew, update hit counter.
         """
+
+        ai_player = self.ai_player
         ball.flip_y()
         skew_ball_direction(ball, paddle, is_cpu=player_is_cpu)
-        if not player_is_cpu:
-            self.ai_player.scores['hits'] += 1
-            ball.last_hit_by_player = True
-            ball.last_hit_by_cpu = False
+        if player_is_cpu:
+            ai_player.scores['CPU Hits'] += 1
         else:
-            ball.last_hit_by_cpu = True
-            ball.last_hit_by_player = False
-        ball.hits += 1
+            ai_player.scores['Player Hits'] += 1
+            ai_player.add_hit_to_streak()
+        # TODO: Update variables here to avoid ball sticking to the paddle.
+        self.update_variables()
 
     def update_variables(self) -> None:
         """
@@ -154,19 +152,25 @@ class PlayZone:
         from components.geometry import Vec2
         from random import random, choice, randint
 
+        self.ai_player.reset_hit_streak()
         # Re-seed position
-        ball.pos_x, ball.pos_y = randint(120, self.WIDTH - 120), self.HEIGHT / 2
-        ball.reset_status()
+        # TODO: New coordinates should be random within a 'safe-space' that is close to the center,
+        #  both horizontally and vertically
+        ball.pos_x = randint(10, self.WIDTH - 10)
+        ball.pos_y = randint(self.HEIGHT // 2 - 100, self.HEIGHT // 2 + 100)
 
-        # --- NEW: Randomize AI paddle position so it can't safely camp ---
-        # half_pad = self.ai_paddle.width / 2
-        # self.ai_paddle.pos_x = randint(int(half_pad), int(self.WIDTH - half_pad))
+        # --- NEW: Randomize paddle positions so it AI Paddle can't safely camp ---
+        # FIXME: This was recently enabled,
+        #  try commenting out 3 lines below incase code struggles with convergence
+        #half_pad = self.ai_paddle.width / 2
+        #self.ai_paddle.pos_x = randint(int(half_pad), int(self.WIDTH - half_pad))
+        #self.cpu_paddle.pos_x = randint(int(half_pad), int(self.WIDTH - half_pad))
 
         # Re-seed speed with a safe angle (avoid near-horizontal)
-        speed_mag = 12.0
         # Ensure the ball heads generally towards a paddle (pick vertical sign randomly)
         vy_sign = choice([-1.0, 1.0])
         # Pick a small horizontal component so path is learnable, avoid 0
-        vx = (0.3 + 0.5 * random()) * choice([-1.0, 1.0]) * speed_mag * 0.2
-        vy = vy_sign * (speed_mag * (1.0 - abs(vx) / speed_mag))
+        vx = (0.3 + 0.5 * random()) * choice([-1.0, 1.0]) * self.ball_speed_magnitude * 0.4
+        vy = vy_sign * (self.ball_speed_magnitude * (1.0 - abs(vx) / self.ball_speed_magnitude))
         ball.speed = Vec2(vx, vy)
+

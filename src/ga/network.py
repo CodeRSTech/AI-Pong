@@ -117,3 +117,54 @@ class NeuralNet(nn.Module):
         self.load_state_dict(state)
         self.to(DEVICE)
         self.eval()
+
+
+class BatchedPopulationBrain:
+    """
+    Stacks individual NeuralNet weights into a batched 3D tensor to evaluate
+    the entire population in one single GPU pass.
+    """
+
+    def __init__(self, players):
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.W = []
+        self.B = []
+        self.acts = []
+
+        num_layers = len(players[0].neural_net.layers)
+
+        for i in range(num_layers):
+            # Stack all weights: each is (Out, In) -> stacked is (Pop, Out, In)
+            w_stack = torch.stack([p.neural_net.layers[i][0].weight.data for p in players])
+            b_stack = torch.stack([p.neural_net.layers[i][0].bias.data for p in players])
+
+            self.W.append(w_stack.to(self.device))
+            self.B.append(b_stack.to(self.device))
+
+            # Map the activation function layer
+            act_module = players[0].neural_net.layers[i][1]
+            if isinstance(act_module, torch.nn.Tanh):
+                self.acts.append(torch.tanh)
+            elif isinstance(act_module, torch.nn.ReLU):
+                self.acts.append(torch.relu)
+            elif isinstance(act_module, torch.nn.Sigmoid):
+                self.acts.append(torch.sigmoid)
+            else:
+                self.acts.append(lambda x: x)
+
+    def predict_batch(self, input_array: np.ndarray) -> np.ndarray:
+        """
+        Takes (Pop, Inputs), returns boolean (Pop, Outputs).
+        """
+        # Shape becomes (Pop, 1, In)
+        x = torch.tensor(input_array, dtype=torch.float32, device=self.device).unsqueeze(1)
+
+        with torch.no_grad():
+            for w, b, act in zip(self.W, self.B, self.acts):
+                # Batch Matrix Multiply: (Pop, 1, In) @ (Pop, In, Out) -> (Pop, 1, Out)
+                z = torch.bmm(x, w.transpose(1, 2)) + b.unsqueeze(1)
+                x = act(z)
+
+        # Final shape (Pop, Out)
+        out = x.squeeze(1)
+        return (out > 0.5).cpu().numpy()

@@ -57,6 +57,7 @@ class Ball(Rectangle):
             radius,
             self.color
         )
+        arcade.draw_circle_outline(self.pos_x, y_up_center, radius, arcade.color.BLACK)
 
     def is_going_up(self) -> bool:
         """
@@ -77,9 +78,3 @@ class Ball(Rectangle):
     def flip_x(self) -> None:
         """Invert horizontal velocity."""
         self.speed.x *= -1
-
-    def reset_status(self) -> None:
-        """Reset hit count and last hit by CPU/player."""
-        self.hits = 0
-        self.last_hit_by_cpu = False
-        self.last_hit_by_player = False

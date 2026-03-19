@@ -5,21 +5,31 @@ Game orchestration using Arcade.
 Creates a window, runs one timed epoch, and returns control to the ga.
 """
 
-import arcade
-import random
-from components.playzone import PlayZone
-from utils.functions import timeit
-from variables import VARIABLES
+import arcade, random
+import numpy as np
 from components.colors import OFF_WHITE, GRAY, LIGHT_GRAY, BLUE
+from components.playzone import PlayZone
+from ga.network import BatchedPopulationBrain
+from variables import VARIABLES
 
 
 class _PongWindow(arcade.Window):
     """
     Arcade window that runs a single epoch of the game.
     """
-    
+
+    network_node_radius = 16
+    network_panel_margin_x = 140
+    network_panel_margin_y = 80
+    network_fallback_architecture = [7, 5, 4, 2]
+    network_input_labels = ["Ball dist x", "Ball dist y", "Paddle pos x", "Ball pos x", "Ball pos y", "Ball speed x",
+                  "Ball speed y"]
+    network_output_labels = ["Left", "Right"]
+    steps_per_frame = 15
 
     def __init__(self, game_ref: "Game"):
+
+
         self.game = game_ref
         update_rate = 1.0 / max(1, int(self.game.fps * self.game.speed))
         super().__init__(
@@ -41,15 +51,18 @@ class _PongWindow(arcade.Window):
         # Clear the backbuffer for this frame
         self.clear()
 
-        # Render a single zone at full size (avoid overlapping zones)
+        # To keep the UI Neural Net panel working, do one manual un-batched
+        # pass just to populate the cached state of the displayed player.
+        display_player = self.game.get_display_player()
+        display_zone = self.game.get_display_zone()
+        if display_player and display_zone:
+            display_player.think(display_player.look(display_zone))
+
         window_h = self.height
-        # COMMENTED OUT CODE RENDERS ONLY ONE PLAYZONE
-        '''zone = self.game.get_display_zone()
-        if zone is not None:
-            zone.render_to(window_h)'''
-        # Draw ALL zones overlapping in the same play area
-        for zone in self.game.zones:
-            zone.render_to(window_h)
+
+        # --- FIX: Only render the Elite Zone ---
+        if display_zone is not None:
+            display_zone.render_to(window_h)
 
         # Optional score overlay for tester (single zone)
         if self.game.num_zones == 1 and self.game.display_score:
@@ -66,6 +79,35 @@ class _PongWindow(arcade.Window):
             )
 
         self._draw_network_panel()
+
+    def on_update(self, delta_time: float):
+        if self._exiting:
+            return
+
+        # Run 30 physics steps for every 1 visual frame
+        STEPS_PER_FRAME = self.steps_per_frame
+        step_delta = delta_time / STEPS_PER_FRAME
+
+        for _ in range(STEPS_PER_FRAME):
+            self.time_running += step_delta
+
+            # --- 1. THE GATHER PHASE ---
+            all_inputs = np.array([zone.ai_player.look(zone) for zone in self.game.zones])
+
+            # --- 2. THE PREDICT PHASE ---
+            outputs = self.game.batched_brain.predict_batch(all_inputs)
+
+            # --- 3. THE SCATTER PHASE ---
+            for i, zone in enumerate(self.game.zones):
+                move_left = bool(outputs[i][0])
+                move_right = bool(outputs[i][1])
+                zone.ai_player.apply_move(zone, move_left, move_right)
+                zone.update()
+
+            if self.game.timeout != -1 and self.time_running >= self.game.timeout:
+                self._exiting = True
+                arcade.exit()
+                return  # Exit immediately, stopping the sub-step loop
 
     def _draw_network_panel(self) -> None:
         panel_left = self.game.play_width
@@ -92,31 +134,32 @@ class _PongWindow(arcade.Window):
 
         if "nn_title" not in self._text_cache:
             self._text_cache["nn_title"] = arcade.Text(
-                "Elite NN Analysis", title_x, title_y, GRAY, 16, bold=True
+                "Elite Neural Network Architecture", title_x, title_y, GRAY, 16, bold=True
             )
             self._text_cache["legend_1"] = arcade.Text(
-                "Blue: Positive Weight | Red: Negative Weight", panel_left + 16, self.height - 60, GRAY, 10
+                "Blue: Positive Weight | Red: Negative Weight | Line Thickness: Magnitude",
+                panel_left + 16, self.height - 60, GRAY, 10
             )
-            self._text_cache["legend_2"] = arcade.Text(
+            '''self._text_cache["legend_2"] = arcade.Text(
                 "Line Thickness: Magnitude", panel_left + 16, self.height - 75, GRAY, 10
             )
             self._text_cache["legend_3"] = arcade.Text(
                 "Inputs: Δx = ball_x - paddle_x (normalized), |v_ball| = speed, pad_x/ball_x/ball_y ∈ [0,1]",
                 panel_left + 16, self.height - 95, GRAY, 10
-            )
+            )'''
         else:
             self._text_cache["nn_title"].x = title_x
             self._text_cache["nn_title"].y = title_y
 
         self._text_cache["nn_title"].draw()
         self._text_cache["legend_1"].draw()
-        self._text_cache["legend_2"].draw()
-        self._text_cache["legend_3"].draw()
+        #self._text_cache["legend_2"].draw()
+        #self._text_cache["legend_3"].draw()
 
         architecture = self.game.get_display_architecture()
         if not architecture:
             # Robust fallback so the panel still renders even if the net isn't ready yet
-            architecture = [5, 6, 4, 2]
+            architecture = self.network_fallback_architecture
 
         # 3. Dynamic Spacing Logic (wider margins so text doesn't overlap diagram)
         cache_key = (tuple(architecture), self.height, self.game.panel_width)
@@ -127,8 +170,8 @@ class _PongWindow(arcade.Window):
         )
         if needs_rebuild:
             self._nn_cache_key = cache_key
-            margin_x = 140
-            margin_y = 120
+            margin_x = self.network_panel_margin_x
+            margin_y = self.network_panel_margin_y
             usable_w = self.game.panel_width - (2 * margin_x)
             usable_h = self.height - (2 * margin_y)
             layer_gap = usable_w / max(1, len(architecture) - 1)
@@ -141,8 +184,8 @@ class _PongWindow(arcade.Window):
                 self._nn_layers_positions.append([(x, y) for y in ys])
 
             # Rebuild static label Text objects for inputs/outputs (one-time per rebuild)
-            INPUT_LABELS = ["Ball dist x", "Ball dist y", "Paddle pos x", "Ball pos x", "Ball pos y"]
-            OUTPUT_LABELS = ["Left", "Right"]
+            INPUT_LABELS = self.network_input_labels
+            OUTPUT_LABELS = self.network_output_labels
             self._text_cache["in_labels"] = []
             self._text_cache["out_labels"] = []
             for i, (x, y) in enumerate(self._nn_layers_positions[0]):
@@ -192,7 +235,8 @@ class _PongWindow(arcade.Window):
 
         # 5. Draw Neurons (with Activations) — always render nodes based on positions
         acts = getattr(net, "last_activations", None) if net else None
-        RADIUS = 20
+        # TODO: Move RADIUS to variables for convenience.
+        RADIUS = self.network_node_radius
         active_out_idx = None
         if net and getattr(net, "last_output_binary", None) is not None:
             try:
@@ -250,20 +294,6 @@ class _PongWindow(arcade.Window):
         # 7. Architecture summary
         self._text_cache["arch"].draw()
 
-    def on_update(self, delta_time: float):
-        if self._exiting:
-            return
-
-        self.time_running += delta_time
-
-        for zone in self.game.zones:
-            zone.update()
-
-        if self.game.timeout != -1 and self.time_running >= self.game.timeout:
-            self._exiting = True
-            arcade.exit()   # <-- important: end the event loop cleanly
-            # DO NOT call self.close() here
-
 
 class Game:
     """
@@ -275,6 +305,7 @@ class Game:
                  fps=VARIABLES['FPS'], timeout=VARIABLES['TIME_OUT'],
                  speed=VARIABLES['SPEED']):
         
+        self.batched_brain = None
         self.display_score = False
         self.fps = fps
         self.speed = speed
@@ -291,7 +322,11 @@ class Game:
         # Build zones (one per player for now; drawn in same space like original)
         best_score = players[0].scores['fitness']
         for i in range(self.num_zones):
-            zone = PlayZone(width, height, speed, players[i], best_score)
+            zone = PlayZone(width,
+                            height,
+                            speed,
+                            players[i],
+                            best_score)
             self.zones.append(zone)
 
         self._window = None
@@ -349,8 +384,11 @@ class Game:
         """
         Run the Arcade window/epoch and return updated players.
         """
+        # --- Compile the Batched 3D Tensor Brain for this generation ---
+        self.batched_brain = BatchedPopulationBrain(self.players)
+
         self._window = _PongWindow(self)
-        arcade.run()  # blocks until window exits
+        arcade.run()
 
         # After run loop ends, ensure window resources are released.
         try:

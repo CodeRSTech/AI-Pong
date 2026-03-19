@@ -114,3 +114,4 @@ class Rectangle:
             (left,  bottom_y_up),  # bottom-left
         ]
         arcade.draw_polygon_filled(points, self.color)
+        arcade.draw_polygon_outline(points, arcade.color.BLACK, 1)

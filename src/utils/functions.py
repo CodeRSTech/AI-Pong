@@ -7,14 +7,14 @@ Game helper functions:
 - math helpers
 """
 import time
-from copy import deepcopy
+
 import numpy as np
 from numpy.random import random
 
-from components.ball import Ball
-from components.geometry import Vec2
-from components.paddle import Paddle
-from utils.logger import logger
+from src.components.ball import Ball
+from src.components.geometry import Vec2
+from src.components.paddle import Paddle
+from src.utils.logger import logger
 
 
 class ActivationsMismatchError(SyntaxError):
@@ -36,8 +36,8 @@ def two_point_crossover(player_1, player_2):
     Two-point crossover for PyTorch-based NeuralNet.
     """
 
-    from ga.player import IndividualPlayer
-    from ga.network import NeuralNet
+    from src.ga.player import IndividualPlayer
+    from src.ga.network import NeuralNet
     import torch
 
     new_player = IndividualPlayer()
@@ -103,25 +103,41 @@ def skew_ball_direction(ball, paddle, is_cpu=False) -> None:
         paddle: Paddle object.
         is_cpu: If True, invert the skew (for the top paddle).
     """
-    deviation = ball.centerx - paddle.centerx
-    influence = quantify(deviation, paddle.width / 2)
+    displacement_x = ball.centerx - paddle.centerx
+    influence = displacement_x // (paddle.width / 2)
     horizon = Vec2(1, 0)
+
     # Only skew if angle with horizon is significant
-    if abs(ball.speed.angle_to(horizon)) > 30:
-        rotation = influence * 45
+    if abs(ball.speed.angle_to(horizon)) > 15:
+        rotation = influence * 30
         if is_cpu:
             rotation *= -1
     else:
         rotation = 0
     ball.speed.rotate_ip(rotation)
 
+    new_angle = abs(ball.speed.angle_to(horizon))
 
-def quantify(value, factor) -> float:
+    if new_angle == 0:
+        ball.speed.y = 0.2
+
+    # FIXME: Following implementation (partially working) increases ball speed
+    #  depending upon how far from centre it hit the paddle.
+    #  Key issue here is that there isn't a working method to reset the speed
+    #  once the ball angle re-adjusts after a fresh hit.
+    # speed_multiplier = 1.0
+    #if new_angle < 20:
+    #    difference = 20 - new_angle
+    #    speed_multiplier = (difference + 1) / 10.0
+    # ball.speed.scale_ip(speed_multiplier)
+
+
+def squash(value, factor) -> float:
     """
     Squash 'value' using tanh(value/factor) and scale it back by 'factor'.
     """
     y = np.tanh(value / factor) * factor
-    return y
+    return float(y)
 
 
 def timeit(func):
@@ -161,8 +177,8 @@ def create_ball() -> Ball:
     """
     Create a new Ball object with random velocity and color.
     """
-    ball = Ball(150, 150, 10, 10)
-    ball.speed = Vec2(12, 0)
+    ball = Ball(150, 150, 12, 12)
+    ball.speed = Vec2(2, 0)
     ball.speed.rotate_ip(random() * 360)
     ball.color = (
         int(random() * 255),

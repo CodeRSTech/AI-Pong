@@ -4,13 +4,12 @@ Visualize a saved (elite) player in a single-zone infinite game.
 """
 
 import random
-import torch
+
 from ga.player import IndividualPlayer
 from game import Game
 from utils.logger import logger
 
-num_layers = 3
-random.seed(119)
+random.seed(38345343)
 
 
 def load_player() -> IndividualPlayer:
