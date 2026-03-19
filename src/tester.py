@@ -1,31 +1,40 @@
+
+"""
+Visualize a saved (elite) player in a single-zone infinite game.
+"""
+
 import random
-from player import IndividualPlayer
+import torch
+from ga.player import IndividualPlayer
 from game import Game
-import pickle
+from utils.logger import logger
 
 num_layers = 3
 random.seed(119)
 
 
-def load_player():
+def load_player() -> IndividualPlayer:
     """
-    Load player data from saved weights and biases files.
-
-    Returns:
-    IndividualPlayer: Player object with loaded weights and biases.
+    Load player from a single PyTorch weights file (state_dict).
     """
     player = IndividualPlayer()
-    for i in range(num_layers):
-        weights_file = open("layer{0}.weights".format(i), 'rb')
-        player.neural_net.layers[i].weights = pickle.load(weights_file)
-        weights_file.close()
-        biases_file = open("layer{0}.biases".format(i), 'rb')
-        player.neural_net.layers[i].biases = pickle.load(biases_file)
-        biases_file.close()
+    checkpoint_path = "elite_model.pt"
+    try:
+        player.neural_net.load_weights(checkpoint_path)
+    except FileNotFoundError:
+        raise FileNotFoundError(
+            f"Checkpoint '{checkpoint_path}' not found. "
+            f"Save a model with player.neural_net.save_weights('{checkpoint_path}') first."
+        )
     return player
 
 
-players = [load_player()]
-game = Game(players, timeout=-1)
-game.display_score = True
-game.start()
+if __name__ == "__main__":
+    players = [load_player()]
+    game = Game(players, timeout=-1)
+    game.display_score = True
+    try:
+        game.start()
+    except KeyboardInterrupt:
+        logger.info("Game interrupted by user. Exiting...")
+        exit(0)

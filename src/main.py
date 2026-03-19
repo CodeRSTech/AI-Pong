@@ -1,17 +1,24 @@
-import pygame as pg
+# src/main.py
+"""
+Entry point for running the Genetic Algorithm end-to-end.
+"""
+
 from numpy import random
-from player import IndividualPlayer
-from ga_core import GeneticAlgorithm
+from ga.player import IndividualPlayer
+from ga.ga_core import GeneticAlgorithm
+from utils.logger import logger
 
-random.seed(3683)
+random.seed(383)
 
-# Create Initial Population
-population_size = 100
-initial_population = [IndividualPlayer() for _ in range(population_size)]
+if __name__ == "__main__":
+    # Create Initial Population
+    population_size = 50
+    initial_population = [IndividualPlayer() for _ in range(population_size)]
 
-# Load the GA
-ga = GeneticAlgorithm(initial_population)
-
-# run
-ga.start()
-pg.quit()
+    # Load and run the ga
+    ga = GeneticAlgorithm(initial_population)
+    try:
+        ga.start()
+    except KeyboardInterrupt:
+        logger.info("Keyboard interrupt received. Exiting...")
+        exit(0)
