@@ -1,27 +1,13 @@
-from functions import binary, relu
-from numpy import tanh
-from pygame.color import Color
+# src/variables.py
+"""
+Global configuration and activation function lookup.
+"""
 
 VARIABLES = {
-    'WIDTH': 400,
+    'WIDTH': 476,
     'HEIGHT': 500,
-    'FPS': 288,
-    'TIME_OUT': 4,
-    'SPEED': 2
+    'FPS': 144,  # Logical updates per second (used to set Arcade update rate)
+    'TIME_OUT': 12,  # Seconds per generation; -1 for infinite
+    'SPEED': 2.5,  # Multiplier for the update rate
+    'PANEL_WIDTH': 640,
 }
-
-activation_functions = {
-    'binary': binary,
-    'tanh': tanh,
-    'relu': relu,
-}
-
-BLACK = Color(0, 0, 0)
-WHITE = Color(255, 255, 255)
-RED = Color(200, 0, 0)
-GREEN = Color(0, 200, 0)
-BLUE = Color(0, 0, 200)
-YELLOW = Color(255, 255, 0)
-GRAY = Color(100, 100, 100)
-LIGHT_GRAY = Color(150, 150, 150)
-OFF_WHITE = Color(220, 220, 180)

@@ -1,2 +1,5 @@
-pygame~=2.5.2
-numpy~=1.26.3
+arcade
+numpy
+loguru
+torch
+torchvision
