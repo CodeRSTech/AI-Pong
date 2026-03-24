@@ -6,9 +6,10 @@ Genetic Algorithm core: selection, crossover, mutation, and population managemen
 import random
 from copy import deepcopy
 
-from src.ga import IndividualPlayer
+from src.ga.player import IndividualPlayer
 from src.game import Game
-from src.utils import two_point_crossover, logger
+from src.utils import logger
+from src.utils.functions import two_point_crossover
 
 class GeneticAlgorithm:
     """

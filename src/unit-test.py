@@ -8,7 +8,7 @@ Consider lowering timeout or adding a headless mode for CI.
 
 import unittest
 from copy import deepcopy
-from src.ga import IndividualPlayer
+from src.ga.player import IndividualPlayer
 from src.components import Ball
 from src.game import Game
 from src.ga import GeneticAlgorithm

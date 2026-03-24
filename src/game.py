@@ -8,8 +8,8 @@ Creates a window, runs one timed epoch, and returns control to the ga.
 import arcade, random
 import numpy as np
 from src.components.colors import OFF_WHITE, GRAY, LIGHT_GRAY, BLUE, RED
-from src.components import PlayZone
-from src.ga import BatchedPopulationBrain
+from src.components.playzone import PlayZone
+from src.ga.network import BatchedPopulationBrain
 from src.utils import logger
 from src.variables import VARIABLES
 

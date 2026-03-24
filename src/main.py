@@ -4,7 +4,8 @@ Entry point for running the Genetic Algorithm end-to-end.
 """
 
 from numpy import random
-from src.ga import IndividualPlayer, GeneticAlgorithm
+from src.ga.player import IndividualPlayer
+from src.ga import GeneticAlgorithm
 from src.utils import logger
 
 random.seed(38345343)

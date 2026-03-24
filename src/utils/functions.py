@@ -11,10 +11,8 @@ import time
 import numpy as np
 from numpy.random import random
 
-from src.components.ball import Ball
-from src.components.geometry import Vec2
-from src.components.paddle import Paddle
-from src.utils.logger import logger
+from src.components import Ball, Paddle, Vec2
+from src.utils import logger
 
 
 class ActivationsMismatchError(SyntaxError):

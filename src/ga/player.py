@@ -4,8 +4,8 @@ AI Player driven by a tiny neural network.
 """
 import uuid
 import numpy as np
-from src.ga import NeuralNet
-from src.utils import squash
+from src.ga.network import NeuralNet
+from src.utils.functions import squash
 
 
 class IndividualPlayer:

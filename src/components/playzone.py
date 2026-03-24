@@ -6,7 +6,7 @@ This module keeps simulation in y-down space (origin top-left). Rendering
 converts to y-up in draw calls of each entity.
 """
 
-from src.utils import skew_ball_direction, create_paddle, create_ball
+from src.utils.functions import skew_ball_direction, create_paddle, create_ball
 
 
 class PlayZone:
@@ -18,7 +18,6 @@ class PlayZone:
     Updates by letting the ball, cpu paddle and player paddle make their moves
     and handling collisions. Updates the scores.
     """
-    # TODO: correlate with pre-set magnitude of ball speed
     ball_speed_magnitude = 5.0
 
     def __init__(self, width, height, speed, ai_player, best_ai_fitness=0):
