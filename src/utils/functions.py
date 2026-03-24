@@ -103,7 +103,7 @@ def skew_ball_direction(ball, paddle, is_cpu=False) -> None:
         paddle: Paddle object.
         is_cpu: If True, invert the skew (for the top paddle).
     """
-    displacement_x = ball.centerx - paddle.centerx
+    displacement_x = ball.center_x - paddle.center_x
     influence = displacement_x // (paddle.width / 2)
     horizon = Vec2(1, 0)
 
