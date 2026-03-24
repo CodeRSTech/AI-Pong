@@ -7,10 +7,11 @@ Creates a window, runs one timed epoch, and returns control to the ga.
 
 import arcade, random
 import numpy as np
-from components.colors import OFF_WHITE, GRAY, LIGHT_GRAY, BLUE
-from components.playzone import PlayZone
-from ga.network import BatchedPopulationBrain
-from variables import VARIABLES
+from src.components.colors import OFF_WHITE, GRAY, LIGHT_GRAY, BLUE, RED
+from src.components import PlayZone
+from src.ga import BatchedPopulationBrain
+from src.utils import logger
+from src.variables import VARIABLES
 
 
 class _PongWindow(arcade.Window):
@@ -21,15 +22,15 @@ class _PongWindow(arcade.Window):
     network_node_radius = 16
     network_panel_margin_x = 140
     network_panel_margin_y = 80
-    network_fallback_architecture = [7, 5, 4, 2]
-    network_input_labels = ["Ball dist x", "Ball dist y", "Paddle pos x", "Ball pos x", "Ball pos y", "Ball speed x",
-                  "Ball speed y"]
+    network_fallback_architecture = [7, 8, 6, 2]
+    network_input_labels = ["Ball dist x", "Ball dist y",
+                            "Paddle pos x",
+                            "Ball pos x", "Ball pos y",
+                            "Ball speed x", "Ball speed y"]
     network_output_labels = ["Left", "Right"]
     steps_per_frame = 15
 
-    def __init__(self, game_ref: "Game"):
-
-
+    def __init__(self, game_ref: Game):
         self.game = game_ref
         update_rate = 1.0 / max(1, int(self.game.fps * self.game.speed))
         super().__init__(
@@ -48,7 +49,7 @@ class _PongWindow(arcade.Window):
         self._text_cache = {}
 
     def on_draw(self):
-        # Clear the backbuffer for this frame
+        # Clear the back buffer for this frame
         self.clear()
 
         # To keep the UI Neural Net panel working, do one manual un-batched
@@ -60,7 +61,7 @@ class _PongWindow(arcade.Window):
 
         window_h = self.height
 
-        # --- FIX: Only render the Elite Zone ---
+        # --- Only render the Elite Zone ---
         if display_zone is not None:
             display_zone.render_to(window_h)
 
@@ -85,10 +86,10 @@ class _PongWindow(arcade.Window):
             return
 
         # Run 30 physics steps for every 1 visual frame
-        STEPS_PER_FRAME = self.steps_per_frame
-        step_delta = delta_time / STEPS_PER_FRAME
+        steps_per_frame = self.steps_per_frame
+        step_delta = delta_time / steps_per_frame
 
-        for _ in range(STEPS_PER_FRAME):
+        for _ in range(steps_per_frame):
             self.time_running += step_delta
 
             # --- 1. THE GATHER PHASE ---
@@ -115,11 +116,13 @@ class _PongWindow(arcade.Window):
         label_margin = 40  # more spacing so labels don't collide with nodes
 
         # 1. Background
+        # --------------------------------------------------------------------------------------------------------------
         arcade.draw_lrbt_rectangle_filled(panel_left, panel_right, 0, self.height, LIGHT_GRAY)
         arcade.draw_line(panel_left, 0, panel_left, self.height, GRAY, 2)
 
         # 2. Title & Legend (create Text once and reuse to avoid warning)
         #    Also draw a color swatch for the displayed player's paddle.
+        # --------------------------------------------------------------------------------------------------------------
         title_y = self.height - 30
         dz = self.game.get_display_zone()
         swatch_color = getattr(dz.ai_paddle, "color", BLUE) if dz else BLUE
@@ -140,21 +143,12 @@ class _PongWindow(arcade.Window):
                 "Blue: Positive Weight | Red: Negative Weight | Line Thickness: Magnitude",
                 panel_left + 16, self.height - 60, GRAY, 10
             )
-            '''self._text_cache["legend_2"] = arcade.Text(
-                "Line Thickness: Magnitude", panel_left + 16, self.height - 75, GRAY, 10
-            )
-            self._text_cache["legend_3"] = arcade.Text(
-                "Inputs: Δx = ball_x - paddle_x (normalized), |v_ball| = speed, pad_x/ball_x/ball_y ∈ [0,1]",
-                panel_left + 16, self.height - 95, GRAY, 10
-            )'''
         else:
             self._text_cache["nn_title"].x = title_x
             self._text_cache["nn_title"].y = title_y
 
         self._text_cache["nn_title"].draw()
         self._text_cache["legend_1"].draw()
-        #self._text_cache["legend_2"].draw()
-        #self._text_cache["legend_3"].draw()
 
         architecture = self.game.get_display_architecture()
         if not architecture:
@@ -162,6 +156,7 @@ class _PongWindow(arcade.Window):
             architecture = self.network_fallback_architecture
 
         # 3. Dynamic Spacing Logic (wider margins so text doesn't overlap diagram)
+        # --------------------------------------------------------------------------------------------------------------
         cache_key = (tuple(architecture), self.height, self.game.panel_width)
         needs_rebuild = (
                 self._nn_layers_positions is None
@@ -184,20 +179,20 @@ class _PongWindow(arcade.Window):
                 self._nn_layers_positions.append([(x, y) for y in ys])
 
             # Rebuild static label Text objects for inputs/outputs (one-time per rebuild)
-            INPUT_LABELS = self.network_input_labels
-            OUTPUT_LABELS = self.network_output_labels
+            input_labels = self.network_input_labels
+            output_labels = self.network_output_labels
             self._text_cache["in_labels"] = []
             self._text_cache["out_labels"] = []
             for i, (x, y) in enumerate(self._nn_layers_positions[0]):
-                if i < len(INPUT_LABELS):
+                if i < len(input_labels):
                     self._text_cache["in_labels"].append(
-                        arcade.Text(INPUT_LABELS[i], x - label_margin, y, GRAY, 11,
+                        arcade.Text(input_labels[i], x - label_margin, y, GRAY, 11,
                                     anchor_x="right", anchor_y="center")
                     )
             for i, (x, y) in enumerate(self._nn_layers_positions[-1]):
-                if i < len(OUTPUT_LABELS):
+                if i < len(output_labels):
                     self._text_cache["out_labels"].append(
-                        arcade.Text(OUTPUT_LABELS[i], x + label_margin, y, GRAY, 11,
+                        arcade.Text(output_labels[i], x + label_margin, y, GRAY, 11,
                                     anchor_x="left", anchor_y="center", bold=True)
                     )
 
@@ -209,34 +204,35 @@ class _PongWindow(arcade.Window):
         net = getattr(player, "neural_net", None)
 
         # 4. Draw Weights (Connections) — skip if net is missing or has no layers
+        # --------------------------------------------------------------------------------------------------------------
         if net and getattr(net, "layers", None) and len(net.layers) > 0:
             weights = []
             max_abs_w = 1e-8
             for seq in net.layers:
                 linear = seq[0]
-                W = linear.weight.detach().cpu().numpy()
-                weights.append(W)
-                max_abs_w = max(max_abs_w, float(abs(W).max()))
+                linear_weights = linear.weight.detach().cpu().numpy()
+                weights.append(linear_weights)
+                max_abs_w = max(max_abs_w, float(abs(linear_weights).max()))
 
-            POS_COLOR = BLUE
-            NEG_COLOR = (200, 50, 50)  # Red
-            MIN_THICK, MAX_THICK = 0.5, 4.0
+            positive_color = BLUE
+            negative_color = RED  # Red
+            min_weight_thickness, max_weight_thickness = 0.5, 4.0
 
-            for layer_i, W in enumerate(weights):
-                src_nodes = layers_positions[layer_i]
-                dst_nodes = layers_positions[layer_i + 1]
-                for dst_j, (x2, y2) in enumerate(dst_nodes):
-                    for src_i, (x1, y1) in enumerate(src_nodes):
-                        w = float(W[dst_j, src_i])
+            for layer_i, linear_weights in enumerate(weights):
+                source_nodes = layers_positions[layer_i]
+                destination_nodes = layers_positions[layer_i + 1]
+                for dst_j, (x2, y2) in enumerate(destination_nodes):
+                    for src_i, (x1, y1) in enumerate(source_nodes):
+                        w = float(linear_weights[dst_j, src_i])
                         t = abs(w) / max_abs_w
-                        thickness = MIN_THICK + t * (MAX_THICK - MIN_THICK)
-                        color = POS_COLOR if w >= 0 else NEG_COLOR
+                        thickness = min_weight_thickness + t * (max_weight_thickness - min_weight_thickness)
+                        color = positive_color if w >= 0 else negative_color
                         arcade.draw_line(x1, y1, x2, y2, color, thickness)
 
         # 5. Draw Neurons (with Activations) — always render nodes based on positions
+        # --------------------------------------------------------------------------------------------------------------
         acts = getattr(net, "last_activations", None) if net else None
-        # TODO: Move RADIUS to variables for convenience.
-        RADIUS = self.network_node_radius
+        network_node_radius = self.network_node_radius
         active_out_idx = None
         if net and getattr(net, "last_output_binary", None) is not None:
             try:
@@ -244,10 +240,13 @@ class _PongWindow(arcade.Window):
                 if lob.ndim == 2 and lob.shape[0] >= 1:
                     active_out_idx = int(lob[0].argmax())
             except Exception:
+                logger.opt(exception=True).error("ERROR:\n"
+                                                 "Unknown error while reading `last_output_binary` of Neural Network.\n"
+                                                 "setting `active_out_idx` to `None`")
                 active_out_idx = None
 
-        ACTIVE_COLOR = (50, 200, 50)
-        INACTIVE_COLOR = (120, 120, 160)
+        active_color = (50, 200, 50)
+        inactive_color = (120, 120, 160)
 
         for layer_idx, nodes in enumerate(layers_positions):
             layer_act = acts[layer_idx][0] if (acts is not None and layer_idx < len(acts)) else None
@@ -261,13 +260,14 @@ class _PongWindow(arcade.Window):
 
                 if layer_idx == len(layers_positions) - 1:
                     if active_out_idx is not None and j == active_out_idx:
-                        arcade.draw_circle_filled(x, y, RADIUS + 4, (*ACTIVE_COLOR[:3], 80))
-                        arcade.draw_circle_filled(x, y, RADIUS, ACTIVE_COLOR)
+                        # Draw a larger circle with alpha=80, draw the smaller circle on top of that
+                        arcade.draw_circle_filled(x, y, network_node_radius + 4, (*active_color[:3], 80))
+                        arcade.draw_circle_filled(x, y, network_node_radius, active_color)
                         continue
                     else:
-                        node_color = INACTIVE_COLOR
+                        node_color = inactive_color
 
-                arcade.draw_circle_filled(x, y, RADIUS, node_color)
+                arcade.draw_circle_filled(x, y, network_node_radius, node_color)
 
         # 6. Labels
         for t in self._text_cache.get("in_labels", []):

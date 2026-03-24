@@ -4,8 +4,8 @@ AI Player driven by a tiny neural network.
 """
 import uuid
 import numpy as np
-from src.ga.network import NeuralNet
-from src.utils.functions import squash
+from src.ga import NeuralNet
+from src.utils import squash
 
 
 class IndividualPlayer:
@@ -200,7 +200,7 @@ class IndividualPlayer:
     # NEW! Separate method for retrieving fitness value.
     def get_fitness(self) -> float:
         """Get the fitness."""
-        return self.scores['Fitness']
+        return self.scores['fitness']
 
     def get_scores(self) -> str:
         fitness = self.scores['fitness']
@@ -226,50 +226,36 @@ class IndividualPlayer:
 
         victory_bonus_multiplier = 1.25 if (player_wins > 1 and cpu_wins == 0) else 1.0
 
-        return ("Fitness: {0}, \n"
-                "Scores -> "
-                "Player: {3}, "
-                "CPU: {4}, "
-                "Ratio: {2:0.2f}, "
-                "Gap: {1}, "
-                "Longest Streak: {14},"
-                "\n"
-                "Moves -> "
-                "Total: {5}, "
-                "Ratio: {6:0.4f}, "
-                "\n"
-                "Hits ->"
-                "Player: {15}, "
-                "CPU: {16}, "
-                "Longest Streak: {17}, \n"
-                "Others: {7:0.4f}\n"
-                "Fitness math:\n"
-                "-------------\n"
-                "[ \t{8} <gap>\n"
-                " +\t{9:0.2f} \t<move-bonus>\n"
-                " +\t{10:0.2f} \t<hits>\n"
-                " +\t{11:0.2f} \t<hits-streak>\n"
-                " +\t{12:0.2f} \t<winning-streak> ]  * {13:0.2f} * {18:0.2f}"
-                "\n".format(fitness,
-                                score_gap,
-                                score_ratio,
-                                player_wins,
-                                cpu_wins,
-                                total_moves,
-                                move_ratio,
-                                other_scores,
-                                gap_score,
-                                move_bonus,
-                                hits_score,
-                                hits_streak_score,
-                                winning_streak_score,
-                                ((score_ratio+1)**2),
-                                winning_streak,
-                                player_hits,
-                                cpu_hits,
-                                hit_streak,
-                                victory_bonus_multiplier,
-                            ))
+        return (
+            f"Fitness: {fitness}\n"
+            f"Scores -> "
+            f"Player: {player_wins}, "
+            f"CPU: {cpu_wins}, "
+            f"Ratio: {score_ratio:0.2f}, "
+            f"Gap: {score_gap}, "
+            f"Longest Streak: {winning_streak},\n"
+
+            f"Moves -> "
+            f"Total: {total_moves}, "
+            f"Ratio: {move_ratio:0.4f},\n"
+
+            f"Hits -> "
+            f"Player: {player_hits}, "
+            f"CPU: {cpu_hits}, "
+            f"Longest Streak: {hit_streak},\n"
+
+            f"Others: {other_scores:0.4f}\n"
+
+            f"Fitness math:\n"
+            f"-------------\n"
+            f"[ \t{gap_score} <gap>\n"
+            f" +\t{move_bonus:0.2f} \t<move-bonus>\n"
+            f" +\t{hits_score:0.2f} \t<hits>\n"
+            f" +\t{hits_streak_score:0.2f} \t<hits-streak>\n"
+            f" +\t{winning_streak_score:0.2f} \t<winning-streak> ] "
+            f"* {(score_ratio + 1) ** 2:0.2f} "
+            f"* {victory_bonus_multiplier:0.2f}\n"
+        )
 
     def reset_hit_streak(self) -> None:
         """Reset the streak counter."""
@@ -305,7 +291,7 @@ class IndividualPlayer:
 
     def reset_defaults(self) -> None:
         """
-        Reset stats and assign new UID for brand new offspring/pupils.
+        Reset stats and assign new UID for brand-new offspring/pupils.
         """
         self.uid = uuid.uuid4()
         self.age = 0

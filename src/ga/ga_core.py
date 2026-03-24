@@ -6,10 +6,9 @@ Genetic Algorithm core: selection, crossover, mutation, and population managemen
 import random
 from copy import deepcopy
 
-from src.ga.player import IndividualPlayer
+from src.ga import IndividualPlayer
 from src.game import Game
-from src.utils.functions import two_point_crossover
-from src.utils.logger import logger
+from src.utils import two_point_crossover, logger
 
 class GeneticAlgorithm:
     """
@@ -37,7 +36,7 @@ class GeneticAlgorithm:
         - Crossover and,
         - Mutation.
         """
-        logger.info("Starting GA... \n"
+        logger.info("Starting GA... "
                     "will run for upto {0} generations.".format(runs))
         # TODO: the `i` variable here, referred to as `gen_idx` in `selection` method,
         #  `calculate_fitness` method and, finally, `save_generation_samples`.
@@ -59,8 +58,8 @@ class GeneticAlgorithm:
             self.cull_population()
             self.repopulate()
         # FIXME: Too broad exception clause
-        except LookupError as e:
-            logger.error("LookupError: {0}".format(e))
+        except LookupError:
+            logger.opt(exception=True).error("LookupError")
             exit(0)
 
     def epoch(self) -> None:
@@ -83,16 +82,13 @@ class GeneticAlgorithm:
         Calculate fitness for every player and persist the elite.
         """
         logger.info("Calculating fitness...")
-        try:
-            for player in self.population:
+        for player in self.population:
+            try:
                 player.calculate_fitness()
-        except KeyError as e:
-            logger.opt(exception=e).critical("CRITICAL ERROR: \n"
-                                             "The GA ran into an error while calculating the fitness.\n"
-                                             "Most likely a certain score value (hits, wins, etc.) was NOT read.\n"
-                                             "Check if whether the program is reading/setting the score with the "
-                                             "same keys.")
-            exit(-1)
+            except KeyError:
+                logger.opt(exception=True).error("Unable to read a certain key while calculating fitness,"
+                                                 "setting fitness score to zero.")
+                player.scores['fitness'] = 0
 
         self.population = sorted(self.population,
                                  key=lambda player_i: player_i.scores['fitness'],
@@ -173,7 +169,7 @@ class GeneticAlgorithm:
 
         if num_to_mate % 2 != 0:
             num_to_mate += 1
-            logger.warning("Crossover rate is not even. Adding one more individual to mate.")
+            logger.warning("Mating pool size is not even. Adding one more individual to mate.")
         mating_pool = self.population[:num_to_mate]
 
         logger.debug("Mating pool size is {0}, maintaining diversity...".format(num_to_mate))
@@ -208,7 +204,7 @@ class GeneticAlgorithm:
 
     def save_generation_samples(self, gen_idx: int, top_n: int = 2) -> None:
         """
-        Save the top N players of the current generation to a checkpoints folder.
+        Save the top N players of the current generation to a checkpoints' folder.
         """
         import os
         os.makedirs("checkpoints", exist_ok=True)

@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -31,15 +32,13 @@ class NeuralNet(nn.Module):
         elif activation == "tanh":
             act = nn.Tanh()
         elif activation == "binary":
-            act = nn.Sigmoid()  # we'll threshold later
+            act = nn.Sigmoid()
         else:
             raise ValueError(f"Unknown activation: {activation}")
 
         self.layers.append(nn.Sequential(linear, act))
         # NOTE: Removed per-layer self.to(DEVICE) to avoid repeated, heavy device transfers
-        # during GA repopulation. We'll route inputs to the parameters' device in predict().
-
-    # ... existing code ...
+        # during GA repopulation. We'll route inputs to the parameters' device in predict()..
 
     def _params_device(self) -> torch.device:
         """

@@ -6,7 +6,7 @@ This module keeps simulation in y-down space (origin top-left). Rendering
 converts to y-up in draw calls of each entity.
 """
 
-from utils.functions import skew_ball_direction, create_paddle, create_ball
+from src.utils import skew_ball_direction, create_paddle, create_ball
 
 
 class PlayZone:
@@ -102,12 +102,11 @@ class PlayZone:
             zone.respawn_ball(ball)
             zone.ai_player.add_win_to_streak()
 
-
         # Paddle collisions
-        if self.ball.colliderect(self.ai_paddle):
+        if self.ball.collide_rect(self.ai_paddle):
             self.handle_collision(self.ball, self.ai_paddle)
 
-        if self.ball.colliderect(self.cpu_paddle):
+        if self.ball.collide_rect(self.cpu_paddle):
             self.handle_collision(self.ball, self.cpu_paddle, player_is_cpu=True)
 
     def handle_collision(self, ball, paddle, player_is_cpu=False) -> None:

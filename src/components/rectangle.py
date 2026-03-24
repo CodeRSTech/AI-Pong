@@ -61,21 +61,21 @@ class Rectangle:
 
     @property
     def center(self) -> tuple[float, float]:
-        return (self.pos_x, self.pos_y)
+        return self.pos_x, self.pos_y
 
     @center.setter
     def center(self, value: tuple[float, float]) -> None:
         self.pos_x, self.pos_y = float(value[0]), float(value[1])
 
     @property
-    def centerx(self) -> float:
+    def center_x(self) -> float:
         return self.pos_x
 
     @property
-    def centery(self) -> float:
+    def center_y(self) -> float:
         return self.pos_y
 
-    def colliderect(self, other: "Rectangle") -> bool:
+    def collide_rect(self, other: "Rectangle") -> bool:
         """
         Axis-aligned bounding-box collision with another rectangle (y-down space).
         """

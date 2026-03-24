@@ -19,5 +19,3 @@ class Paddle(Rectangle):
         Keep center in sync with current position.
         """
         self.center = (self.pos_x, self.pos_y)
-
-

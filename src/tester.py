@@ -5,9 +5,9 @@ Visualize a saved (elite) player in a single-zone infinite game.
 
 import random
 
-from ga.player import IndividualPlayer
+from src.ga import IndividualPlayer
 from game import Game
-from utils.logger import logger
+from src.utils import logger
 
 random.seed(38345343)
 
