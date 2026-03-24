@@ -8,7 +8,7 @@ from src.ga.player import IndividualPlayer
 from src.ga import GeneticAlgorithm
 from src.utils import logger
 
-random.seed(38345343)
+random.seed(334)
 
 initial_population_size = 200
 
