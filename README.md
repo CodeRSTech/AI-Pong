@@ -3,7 +3,7 @@
 A Neural Network based Genetic Algorithm finds the optimal solution for playing 2d game, pong.
 
 ## Change log:
-+ Migrated from `pygame` librate to `Arcade` library.
++ Migrated from `pygame` library to `Arcade` library.
 + `numpy` based perceptron model has been replaced with `torch.NN` module based model.
 + Neural Net model structure has been changed.
 + Updated fitness function.
