@@ -9,7 +9,8 @@ A Neural Network based Genetic Algorithm finds the optimal solution for playing 
 + Updated fitness function.
 + Added visual representation of the Neural Network to the UI.
 + Visual improvements (ball and paddle have borders)
-    ### Performance improvements
+
+### Performance improvements
 + Entire population's neural networks run in batch, resulting in performance boost.
 + Only elite player's playzone is displayed on the screen.
 + A pre-defined number of frames can be skipped before the next frame is rendered.
