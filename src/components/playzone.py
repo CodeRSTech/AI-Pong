@@ -147,7 +147,7 @@ class PlayZone:
         """
         Respawn the ball near the vertical center with a random X.
         """
-        from components.geometry import Vec2
+        from src.components.geometry import Vec2
         from random import random, choice, randint
 
         self.ai_player.reset_hit_streak()

@@ -3,7 +3,7 @@
 Paddle entity rendered as a rectangle.
 """
 
-from components.rectangle import Rectangle
+from src.components.rectangle import Rectangle
 
 
 class Paddle(Rectangle):

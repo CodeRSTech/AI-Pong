@@ -5,8 +5,8 @@ Ball entity with 2D velocity and Arcade rendering.
 
 import arcade
 
-from components.geometry import Vec2
-from components.rectangle import Rectangle
+from src.components.geometry import Vec2
+from src.components.rectangle import Rectangle
 
 
 class Ball(Rectangle):

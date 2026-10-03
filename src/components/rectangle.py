@@ -8,7 +8,7 @@ Note on coordinates:
 - Arcade renders in y-up space (origin bottom-left). We flip y at draw time.
 """
 
-from components.colors import BLACK
+from src.components.colors import BLACK
 import arcade
 
 
