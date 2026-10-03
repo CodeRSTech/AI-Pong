@@ -23,4 +23,6 @@ Each `IndividualPlayer` uses a fully connected `7 → 8 → 6 → 2` neural netw
 
 The Arcade window renders only one representative zone alongside its neural-network visualization; the rest of the population continues to be simulated. Use `python -m src.main` for the rendered training runner or `python -m src.train` for headless training with progress logs. Both continue until interrupted unless `--generations` sets a limit.
 
+Rendering uses a high-contrast dark court with distinct player/CPU paddle colors and a bright ball halo. Court markings, palette, and network-panel styling are draw-only; they do not feed into observations or change simulation state.
+
 After each generation, the best individual is evaluated in fresh games with varied starting positions and directions, duration, and paddle width. Its win and CPU-shutout rates are recorded alongside each run's settings, metrics, elite, and generation checkpoints. Reaching the configured validation target sets a persistent green indicator in the rendered runner; training does not stop. `python -m src.tester` loads the newest run's elite for a one-player, unbounded viewing game.

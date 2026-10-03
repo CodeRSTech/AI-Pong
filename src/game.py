@@ -14,7 +14,18 @@ from typing import Callable
 import arcade
 import numpy as np
 
-from src.components.colors import OFF_WHITE, GRAY, LIGHT_GRAY, BLUE, RED
+from src.components.colors import (
+    ARENA_BACKGROUND,
+    ARENA_LINE,
+    GRAY,
+    PANEL_BACKGROUND,
+    PANEL_BORDER,
+    PLAYER_ACCENT,
+    TEXT_MUTED,
+    TEXT_PRIMARY,
+    WEIGHT_NEGATIVE,
+    WEIGHT_POSITIVE,
+)
 from src.components.playzone import PlayZone
 from src.ga.network import BatchedPopulationBrain
 from src.utils import logger
@@ -46,7 +57,7 @@ class _PongWindow(arcade.Window):
             update_rate=update_rate
         )
         self.set_update_rate(update_rate)
-        arcade.set_background_color(OFF_WHITE)
+        arcade.set_background_color(ARENA_BACKGROUND)
         self.time_running = 0.0  # seconds
         self._exiting = False
         self._nn_cache_key = None
@@ -67,7 +78,9 @@ class _PongWindow(arcade.Window):
 
         window_h = self.height
 
-        # --- Only render the Elite Zone ---
+        self._draw_arena()
+
+        # Render only the elite zone; the rest of the population remains headless.
         if display_zone is not None:
             display_zone.render_to(window_h)
 
@@ -84,7 +97,7 @@ class _PongWindow(arcade.Window):
                 f"VALIDATION REACHED (gen {status['generation']}) - "
                 f"wins {status['win_rate']:.0%}, shutouts {status['shutout_rate']:.0%}",
                 self.game.play_width // 2,
-                self.height - 24,
+                self.height - 56,
                 success_color,
                 13,
                 anchor_x="center",
@@ -100,13 +113,33 @@ class _PongWindow(arcade.Window):
                 score_text,
                 self.game.play_width // 2,
                 self.height // 2,
-                GRAY,
+                TEXT_PRIMARY,
                 18,
                 anchor_x="center",
                 anchor_y="center",
             )
 
         self._draw_network_panel()
+
+    def _draw_arena(self) -> None:
+        """Draw the render-only court markings behind the active play zone."""
+        width = self.game.play_width
+        height = self.height
+        arcade.draw_lrbt_rectangle_filled(
+            0, width, 0, height, ARENA_BACKGROUND
+        )
+        arcade.draw_lrbt_rectangle_outline(
+            4, width - 4, 4, height - 4, ARENA_LINE, 2
+        )
+        center_x = width / 2
+        arcade.draw_circle_outline(
+            center_x, height / 2, min(width, height) * 0.12, ARENA_LINE, 2
+        )
+        # Use short dashes instead of a solid divider to match the court's center mark.
+        for y in range(12, height, 24):
+            arcade.draw_line(
+                center_x, y, center_x, min(y + 12, height), ARENA_LINE, 2
+            )
 
     def on_update(self, delta_time: float):
         if self._exiting:
@@ -129,15 +162,17 @@ class _PongWindow(arcade.Window):
 
         # 1. Background
         # --------------------------------------------------------------------------------------------------------------
-        arcade.draw_lrbt_rectangle_filled(panel_left, panel_right, 0, self.height, LIGHT_GRAY)
-        arcade.draw_line(panel_left, 0, panel_left, self.height, GRAY, 2)
+        arcade.draw_lrbt_rectangle_filled(
+            panel_left, panel_right, 0, self.height, PANEL_BACKGROUND
+        )
+        arcade.draw_line(panel_left, 0, panel_left, self.height, PANEL_BORDER, 2)
 
         # 2. Title & Legend (create Text once and reuse to avoid warning)
         #    Also draw a color swatch for the displayed player's paddle.
         # --------------------------------------------------------------------------------------------------------------
         title_y = self.height - 30
         dz = self.game.get_display_zone()
-        swatch_color = getattr(dz.ai_paddle, "color", BLUE) if dz else BLUE
+        swatch_color = getattr(dz.ai_paddle, "color", PLAYER_ACCENT) if dz else PLAYER_ACCENT
         swatch_w, swatch_h = 28, 16
         swatch_left = panel_left + 16
         swatch_right = swatch_left + swatch_w
@@ -149,11 +184,12 @@ class _PongWindow(arcade.Window):
 
         if "nn_title" not in self._text_cache:
             self._text_cache["nn_title"] = arcade.Text(
-                "Elite Neural Network Architecture", title_x, title_y, GRAY, 16, bold=True
+                "Elite Neural Network Architecture", title_x, title_y,
+                TEXT_PRIMARY, 16, bold=True
             )
             self._text_cache["legend_1"] = arcade.Text(
-                "Blue: Positive Weight | Red: Negative Weight | Line Thickness: Magnitude",
-                panel_left + 16, self.height - 60, GRAY, 10
+                "Blue: positive | Coral: negative | Thickness: magnitude",
+                panel_left + 16, self.height - 60, TEXT_MUTED, 10
             )
         else:
             self._text_cache["nn_title"].x = title_x
@@ -198,18 +234,20 @@ class _PongWindow(arcade.Window):
             for i, (x, y) in enumerate(self._nn_layers_positions[0]):
                 if i < len(input_labels):
                     self._text_cache["in_labels"].append(
-                        arcade.Text(input_labels[i], x - label_margin, y, GRAY, 11,
+                        arcade.Text(input_labels[i], x - label_margin, y, TEXT_MUTED, 11,
                                     anchor_x="right", anchor_y="center")
                     )
             for i, (x, y) in enumerate(self._nn_layers_positions[-1]):
                 if i < len(output_labels):
                     self._text_cache["out_labels"].append(
-                        arcade.Text(output_labels[i], x + label_margin, y, GRAY, 11,
+                        arcade.Text(output_labels[i], x + label_margin, y, TEXT_MUTED, 11,
                                     anchor_x="left", anchor_y="center", bold=True)
                     )
 
             arch_text = " → ".join(str(n) for n in architecture)
-            self._text_cache["arch"] = arcade.Text(arch_text, panel_left + 16, 20, GRAY, 12)
+            self._text_cache["arch"] = arcade.Text(
+                arch_text, panel_left + 16, 20, TEXT_MUTED, 12
+            )
 
         layers_positions = self._nn_layers_positions
         player = self.game.get_display_player()
@@ -226,8 +264,8 @@ class _PongWindow(arcade.Window):
                 weights.append(linear_weights)
                 max_abs_w = max(max_abs_w, float(abs(linear_weights).max()))
 
-            positive_color = BLUE
-            negative_color = RED  # Red
+            positive_color = WEIGHT_POSITIVE
+            negative_color = WEIGHT_NEGATIVE
             min_weight_thickness, max_weight_thickness = 0.5, 4.0
 
             for layer_i, linear_weights in enumerate(weights):
@@ -257,8 +295,8 @@ class _PongWindow(arcade.Window):
                                                  "setting `active_out_idx` to `None`")
                 active_out_idx = None
 
-        active_color = (50, 200, 50)
-        inactive_color = (120, 120, 160)
+        active_color = PLAYER_ACCENT
+        inactive_color = (74, 91, 112)
 
         for layer_idx, nodes in enumerate(layers_positions):
             layer_act = acts[layer_idx][0] if (acts is not None and layer_idx < len(acts)) else None
@@ -266,9 +304,13 @@ class _PongWindow(arcade.Window):
                 if layer_act is not None and j < len(layer_act):
                     val = float(layer_act[j])
                     intensity = int(100 + 155 * min(1.0, abs(val)))
-                    node_color = (*BLUE[:3], intensity) if val >= 0 else (200, 50, 50, intensity)
+                    node_color = (
+                        (*WEIGHT_POSITIVE, intensity)
+                        if val >= 0
+                        else (*WEIGHT_NEGATIVE, intensity)
+                    )
                 else:
-                    node_color = BLUE
+                    node_color = TEXT_MUTED
 
                 if layer_idx == len(layers_positions) - 1:
                     if active_out_idx is not None and j == active_out_idx:
@@ -300,7 +342,7 @@ class _PongWindow(arcade.Window):
                     arcade.draw_lrbt_rectangle_filled(left, right, bottom, top, bg_col)
                     self._text_cache["out_labels"][i].color = txt_col
                 else:
-                    self._text_cache["out_labels"][i].color = GRAY
+                    self._text_cache["out_labels"][i].color = TEXT_MUTED
                 self._text_cache["out_labels"][i].draw()
 
         # 7. Architecture summary

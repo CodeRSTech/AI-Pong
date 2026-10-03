@@ -5,6 +5,7 @@ Ball entity with 2D velocity and Arcade rendering.
 
 import arcade
 
+from src.components.colors import BALL_HALO
 from src.components.geometry import Vec2
 from src.components.rectangle import Rectangle
 
@@ -50,13 +51,19 @@ class Ball(Rectangle):
         """
         y_up_center = window_height - self.pos_y
         radius = self.height / 2
+        # A translucent outer ring keeps the ball easy to track on the dark arena.
+        arcade.draw_circle_outline(
+            self.pos_x, y_up_center, radius + 5, (*BALL_HALO, 110), 2
+        )
         arcade.draw_circle_filled(
             self.pos_x,
             y_up_center,
             radius,
-            self.color
+            (245, 249, 255)
         )
-        arcade.draw_circle_outline(self.pos_x, y_up_center, radius, arcade.color.BLACK)
+        arcade.draw_circle_outline(
+            self.pos_x, y_up_center, radius, (255, 255, 255), 1
+        )
 
     def is_going_up(self) -> bool:
         """

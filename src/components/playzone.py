@@ -7,6 +7,7 @@ converts to y-up in draw calls of each entity.
 """
 
 from src.utils.functions import skew_ball_direction, create_paddle, create_ball
+from src.components.colors import CPU_ACCENT, PLAYER_ACCENT
 
 
 class PlayZone:
@@ -36,8 +37,12 @@ class PlayZone:
         self.paddle_width = paddle_width
 
         self.ball = create_ball()
-        self.cpu_paddle = create_paddle(width, height, self.ball.color, is_cpu=True, width=paddle_width)
-        self.ai_paddle = create_paddle(width, height, self.ball.color, width=paddle_width)
+        self.cpu_paddle = create_paddle(
+            width, height, CPU_ACCENT, is_cpu=True, width=paddle_width
+        )
+        self.ai_paddle = create_paddle(
+            width, height, PLAYER_ACCENT, width=paddle_width
+        )
         self.ai_player = ai_player
         self.best_ai_fitness = best_ai_fitness
 

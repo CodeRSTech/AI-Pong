@@ -84,6 +84,7 @@ Install the development extras with `python -m pip install -e ".[dev]"`, then ru
 | Feature | Status |
 | --- | --- |
 | Batched population inference and neural-network visualization | Available |
+| High-contrast Arcade court, distinct paddles, and ball visibility effects | Available |
 | Per-run folders with settings, metrics, validation, and checkpoints | Available |
 | Randomized elite validation and ongoing-training success indicator | Available |
 | Gameplay demo GIF | Capture planned |

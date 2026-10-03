@@ -1,5 +1,6 @@
 from src.game import Game
 from src.components.geometry import Vec2
+from src.components.colors import CPU_ACCENT, PLAYER_ACCENT
 from src.ga.player import IndividualPlayer
 
 
@@ -29,3 +30,11 @@ def test_paddle_collision_counts_edge_touch_as_a_hit():
     zone.check_collisions()
 
     assert zone.ai_player.scores["Player Hits"] == 1
+
+
+def test_paddles_use_distinct_render_colors_without_changing_game_state():
+    game = Game([IndividualPlayer()], width=400, height=500, timeout=-1)
+    zone = game.zones[0]
+
+    assert zone.ai_paddle.color == PLAYER_ACCENT
+    assert zone.cpu_paddle.color == CPU_ACCENT

@@ -10,6 +10,7 @@ Notable project changes are recorded here. This changelog may not include every 
 - Improved crossover to always select a non-empty contiguous neuron range and inherit the selected neurons' outgoing weights.
 - Made simulation steps per rendered frame configurable.
 - Added separate rendered and headless training commands, progress updates, and randomized elite validation.
+- Refreshed the rendered court and neural-network panel with higher-contrast colors and distinct paddles.
 
 ## 1.3.0
 
