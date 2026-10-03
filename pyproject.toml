@@ -1,0 +1,20 @@
+[project]
+name = "ai-pong"
+version = "1.3.0"
+description = "A neural network and genetic algorithm that learns to play Pong."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["arcade", "numpy", "loguru", "torch", "torchvision"]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov", "ruff"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E9", "F63", "F7", "F82"]
