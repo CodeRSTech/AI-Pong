@@ -38,3 +38,10 @@ class SoundEffects:
         self._players.append(player)
         self._last_played[event] = now
         return True
+
+    def close(self) -> None:
+        """Release any playing pyglet players when the owning Arcade window closes."""
+        for player in self._players:
+            player.pause()
+            player.delete()
+        self._players.clear()

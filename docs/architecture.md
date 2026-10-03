@@ -2,14 +2,22 @@
 
 ## Evolution loop
 
-`src/main.py` creates an initial population of `IndividualPlayer` instances and passes it to `GeneticAlgorithm` in `src/ga/ga_core.py`. Each generation:
+`src/main.py` creates an initial population of `IndividualPlayer` instances and passes it to `GeneticAlgorithm` in `src/ga/ga_core.py`. Headless generations continue synchronously through the evaluator. Rendered
+training uses one Arcade window and one event loop for the full lifecycle:
 
-1. Resets population scores and runs one game epoch.
-2. Calculates and sorts individuals by fitness.
-3. Keeps elites and selects other survivors.
-4. Crosses over survivors, mutates offspring, and restores the configured population size.
+1. Reset population scores and play generation gameplay.
+2. Calculate fitness in small batches, then save metrics and checkpoints.
+3. Play the elite through all 20 fresh validation scenarios in the same window.
+4. Keep elites and select other survivors, then cross over, mutate, and restore the configured population.
+5. Begin the next generation without closing or recreating the window.
 
-The default population is 200, the GA retains an elite fraction of 0.1, and the crossover rate is 0.4. The run limit defaults to 1,000 generations.
+Rendered updates advance only a bounded amount of gameplay or validation at a
+time, leaving Arcade's draw and close events responsive during the validation
+suite. The displayed phase, generation, scenario progress, and scores identify
+what the runner is doing between epochs. Closing the window cancels an
+in-progress suite and prevents another generation from starting.
+
+The default population is 200, the GA retains an elite fraction of 0.1, and the crossover rate is 0.4. Training runs continuously unless `--generations` sets a limit.
 
 ## Neural network and batched brain
 
@@ -27,4 +35,4 @@ Rendering uses a high-contrast dark court with distinct player/CPU paddle colors
 
 Rendered games generate short paddle-hit, wall-bounce, and scoring tones with Pyglet's synthesis API, so no audio files or new dependencies are needed. Only the displayed zone plays audio, with per-event cooldowns to keep rapid rallies from becoming noisy. Sound is enabled by default in `src.main` and `src.tester`; pass `--no-sound` to either command to disable it. The headless trainer is silent, and audio events do not affect physics or fitness.
 
-After each generation, the best individual is evaluated in fresh games with varied starting positions and directions, duration, and paddle width. Its win and CPU-shutout rates are recorded alongside each run's settings, metrics, elite, and generation checkpoints. Reaching the configured validation target sets a persistent green indicator in the rendered runner; training does not stop. `python -m src.tester` loads the newest run's elite for a one-player, unbounded viewing game.
+After each generation, the best individual is evaluated in fresh games with varied starting positions and directions, duration, and paddle width. The headless evaluator and rendered suite share the scenario setup and result aggregation. Every scenario uses the same fixed simulation delta in either mode, and Python, NumPy, and PyTorch RNG states are isolated and restored before selection and reproduction. Its win and CPU-shutout rates are recorded alongside each run's settings, metrics, elite, and generation checkpoints. Reaching the configured validation target sets a persistent green indicator in the rendered runner; training does not stop. `python -m src.tester` loads the newest run's elite for a one-player, unbounded viewing game.

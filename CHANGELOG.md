@@ -10,6 +10,7 @@ Notable project changes are recorded here. This changelog may not include every 
 - Improved crossover to always select a non-empty contiguous neuron range and inherit the selected neurons' outgoing weights.
 - Made simulation steps per rendered frame configurable.
 - Added separate rendered and headless training commands, progress updates, and randomized elite validation.
+- Kept rendered training in one responsive Arcade window through fitness, visible elite validation, and reproduction.
 - Refreshed the rendered court and neural-network panel with higher-contrast colors and distinct paddles.
 - Added generated, rate-limited sound effects to rendered games, with a `--no-sound` option.
 

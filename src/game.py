@@ -35,7 +35,7 @@ from src.variables import VARIABLES
 
 class _PongWindow(arcade.Window):
     """
-    Arcade window that runs a single epoch of the game.
+    Arcade window that can either run a standalone epoch or host a training lifecycle.
     """
 
     network_node_radius = 16
@@ -70,6 +70,13 @@ class _PongWindow(arcade.Window):
         # Cache for Text objects to avoid per-frame draw_text calls
         self._text_cache = {}
 
+    def on_close(self):
+        try:
+            if self.game.training_close_callback is not None:
+                self.game.training_close_callback()
+        finally:
+            super().on_close()
+
     def on_draw(self):
         # Clear the back buffer for this frame
         self.clear()
@@ -88,6 +95,9 @@ class _PongWindow(arcade.Window):
         # Render only the elite zone; the rest of the population remains headless.
         if display_zone is not None:
             display_zone.render_to(window_h)
+
+        if self.game.training_update_callback is not None:
+            self._draw_training_status()
 
         status = self.game.validation_status
         if status and status.get("reached"):
@@ -126,6 +136,43 @@ class _PongWindow(arcade.Window):
 
         self._draw_network_panel()
 
+    def _draw_training_status(self) -> None:
+        """Keep lifecycle transitions legible while the same window stays active."""
+        game = self.game
+        phase = f"Generation {game.generation + 1} - {game.training_phase}"
+        arcade.draw_text(
+            phase,
+            game.play_width // 2,
+            self.height - 20,
+            TEXT_PRIMARY,
+            14,
+            anchor_x="center",
+            anchor_y="center",
+            bold=True,
+        )
+        if game.validation_count:
+            wins, losses, ties = game.validation_record
+            detail = (
+                f"Scenario {game.validation_scenario}/{game.validation_count}  "
+                f"Score {game.training_scores.get('Player', 0)}-"
+                f"{game.training_scores.get('CPU', 0)}  "
+                f"W/L/T {wins}/{losses}/{ties}"
+            )
+        else:
+            detail = (
+                f"Player {game.training_scores.get('Player', 0)}  "
+                f"CPU {game.training_scores.get('CPU', 0)}"
+            )
+        arcade.draw_text(
+            detail,
+            game.play_width // 2,
+            self.height - 42,
+            TEXT_PRIMARY,
+            12,
+            anchor_x="center",
+            anchor_y="center",
+        )
+
     def _draw_arena(self) -> None:
         """Draw the render-only court markings behind the active play zone."""
         width = self.game.play_width
@@ -151,6 +198,10 @@ class _PongWindow(arcade.Window):
             return
 
         game = self.game
+        if game.training_update_callback is not None:
+            game.training_update_callback(delta_time)
+            return
+
         steps_per_frame = game.steps_per_frame
         step_delta = delta_time / steps_per_frame
         game.run_steps(steps_per_frame, step_delta)
@@ -363,7 +414,8 @@ class Game:
     def __init__(self, players, width=VARIABLES['WIDTH'], height=VARIABLES['HEIGHT'],
                  fps=VARIABLES['FPS'], timeout=VARIABLES['TIME_OUT'],
                  speed=VARIABLES['SPEED'], steps_per_frame=VARIABLES['STEPS_PER_FRAME'],
-                 paddle_width=80, validation_status=None, sound_enabled=False):
+                 paddle_width=80, validation_status=None, sound_enabled=False,
+                 generation=0, training_phase="Gameplay"):
 
         if not players:
             raise ValueError("Game requires at least one player.")
@@ -399,31 +451,76 @@ class Game:
         self.zones = []
         self._display_player = None
         self._display_zone = None
+        self._window = None
+        self._batch_inputs = np.empty((self.num_zones, 7), dtype=np.float32)
+        self.training_phase = training_phase
+        self.generation = generation
+        self.validation_scenario = 0
+        self.validation_count = 0
+        self.validation_record = (0, 0, 0)
+        self.training_scores = {}
+        self.training_update_callback = None
+        self.training_close_callback = None
+        self.configure_epoch(players, timeout=timeout, paddle_width=paddle_width)
 
-        # Build zones (one per player for now; drawn in same space like original)
+    def configure_epoch(
+        self,
+        players,
+        *,
+        timeout=None,
+        paddle_width=None,
+        phase=None,
+        generation=None,
+        validation_scenario=0,
+        validation_count=0,
+    ) -> None:
+        """Replace a simulation epoch without transferring or recreating its Arcade window."""
+        if not players:
+            raise ValueError("Game requires at least one player.")
+        next_timeout = self.timeout if timeout is None else timeout
+        if not math.isfinite(next_timeout) or (next_timeout <= 0 and next_timeout != -1):
+            raise ValueError("timeout must be positive, or -1 for an unbounded game.")
+
+        self.players = players
+        self.timeout = next_timeout
+        self.paddle_width = self.paddle_width if paddle_width is None else paddle_width
+        self.num_zones = len(players)
+        self.batched_brain = None
+        self.time_running = 0.0
+        self._display_player = None
+        self._display_zone = None
+        self.zones = []
+        if phase is not None:
+            self.training_phase = phase
+        if generation is not None:
+            self.generation = generation
+        self.validation_scenario = validation_scenario
+        self.validation_count = validation_count
+
         best_score = players[0].scores['fitness']
-        for i in range(self.num_zones):
-            zone = PlayZone(
-                width,
-                height,
-                speed,
-                players[i],
-                best_score,
-                paddle_width=paddle_width,
-                sound_event_callback=(
-                    (
+        for i, player in enumerate(players):
+            self.zones.append(
+                PlayZone(
+                    self.play_width,
+                    self.height,
+                    self.speed,
+                    player,
+                    best_score,
+                    paddle_width=self.paddle_width,
+                    sound_event_callback=(
                         lambda event, zone_index=i: self._dispatch_sound_event(
                             self.zones[zone_index], event
                         )
-                    )
-                    if sound_enabled
-                    else None
-                ),
+                        if self.sound_enabled
+                        else None
+                    ),
+                )
             )
-            self.zones.append(zone)
-
-        self._window = None
         self._batch_inputs = np.empty((self.num_zones, 7), dtype=np.float32)
+        self.training_scores = {
+            "Player": players[0].scores.get("Player", 0),
+            "CPU": players[0].scores.get("CPU", 0),
+        }
 
     def _dispatch_sound_event(self, zone: PlayZone, event: str) -> None:
         """Only the visible zone may play audio; sound never affects headless runs."""
@@ -547,20 +644,28 @@ class Game:
 
     def start(self) -> list:
         """
-        Run the Arcade window/epoch and return updated players.
+        Run the standalone Arcade epoch or the attached continuous training lifecycle.
         """
-        # --- Compile the Batched 3D Tensor Brain for this generation ---
+        # The Game owns the single Arcade window; training reconfigures its simulation
+        # between epochs instead of closing the window and starting another event loop.
         self.batched_brain = BatchedPopulationBrain(self.players)
         self.time_running = 0.0
 
         self._window = _PongWindow(self)
-        arcade.run()
-
-        # After run loop ends, ensure window resources are released.
         try:
-            if self._window:
-                self._window.close()
+            arcade.run()
         finally:
-            self._window = None
+            try:
+                if self._sound_effects is not None:
+                    try:
+                        self._sound_effects.close()
+                    finally:
+                        self._sound_effects = None
+            finally:
+                try:
+                    if self._window is not None:
+                        self._window.close()
+                finally:
+                    self._window = None
 
         return self.players

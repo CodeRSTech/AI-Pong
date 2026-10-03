@@ -215,6 +215,190 @@ def test_validator_generates_fresh_scenarios_in_configured_ranges(monkeypatch):
     assert not below_target["reached"]
 
 
+def test_rendered_training_keeps_one_window_through_two_generations(tmp_path, monkeypatch):
+    from src.ga.validation import ValidationScenario
+
+    class FakeZone:
+        def __init__(self):
+            self.ball = SimpleNamespace(
+                pos_x=0,
+                pos_y=0,
+                speed=SimpleNamespace(y=2),
+            )
+            self.ai_paddle = SimpleNamespace(pos_x=0)
+            self.cpu_paddle = SimpleNamespace(pos_x=0)
+
+    class FakeGame:
+        instance = None
+
+        def __init__(self, players, **kwargs):
+            self.play_width = 476
+            self.height = 500
+            self.training_update_callback = None
+            self.training_close_callback = None
+            self.validation_status = kwargs["validation_status"]
+            self.sound_enabled = kwargs["sound_enabled"]
+            self.training_scores = {}
+            self.validation_record = (0, 0, 0)
+            self.configure_calls = 0
+            self.started = 0
+            self.drawn_phases = []
+            self.simulation_steps = []
+            self.configure_epoch(
+                players,
+                timeout=kwargs["timeout"],
+                phase=kwargs["training_phase"],
+                generation=kwargs["generation"],
+            )
+            FakeGame.instance = self
+
+        def configure_epoch(
+            self, players, *, timeout, phase=None, generation=None,
+            paddle_width=None, validation_scenario=0, validation_count=0,
+        ):
+            self.players = players
+            self.timeout = timeout
+            self.training_phase = phase or self.training_phase
+            self.generation = generation if generation is not None else self.generation
+            self.validation_scenario = validation_scenario
+            self.validation_count = validation_count
+            self.zones = [FakeZone()]
+            self.time_running = 0
+            self._finished = False
+            self.configure_calls += 1
+
+        @property
+        def is_finished(self):
+            return self._finished
+
+        def run_steps(self, steps, step_delta):
+            self.simulation_steps.append((steps, step_delta))
+            self.players[0].scores["Player"] = 1
+            self.players[0].scores["CPU"] = 0
+            self.time_running = self.timeout
+            self._finished = True
+
+        def get_display_player(self):
+            return self.players[0]
+
+        def start(self):
+            self.started += 1
+            for _ in range(80):
+                if ga._rendered_phase in ("complete", "stopped"):
+                    break
+                self.training_update_callback(1 / 60)
+                self.drawn_phases.append(
+                    (self.training_phase, self.validation_scenario, self.validation_count)
+                )
+            assert ga._rendered_phase == "complete"
+
+    monkeypatch.setattr("src.game.Game", FakeGame)
+    ga = GeneticAlgorithm(
+        [IndividualPlayer(), IndividualPlayer()],
+        output_dir=tmp_path,
+        render=True,
+        timeout=1,
+        validation_games=20,
+    )
+    ga.validator.scenarios_for = lambda generation: [
+        ValidationScenario(
+            seed=index + 1,
+            duration=1,
+            paddle_width=80,
+            ball_x=100,
+            ball_y=200,
+            ball_vertical_direction=1,
+            ai_paddle_x=100,
+            cpu_paddle_x=300,
+        )
+        for index in range(20)
+    ]
+
+    ga.start(runs=2)
+
+    game = FakeGame.instance
+    assert game.started == 1
+    assert game.configure_calls == 42  # each generation and all 20 scenarios share the window
+    assert any(phase == "Elite validation" for phase, _, _ in game.drawn_phases)
+    assert {count for _, _, count in game.drawn_phases if count} == {20}
+    assert [scenario for _, scenario, count in game.drawn_phases if count] == list(range(1, 21)) * 2
+    assert game.training_phase == "Training complete"
+    assert ga.generation == 1
+    assert (ga.run_dir / "validation.csv").is_file()
+    assert len((ga.run_dir / "validation.csv").read_text(encoding="utf-8").splitlines()) == 3
+    validation_steps = [
+        (steps, delta)
+        for steps, delta in game.simulation_steps
+        if delta == pytest.approx(1 / (ga.fps * ga.speed * ga.steps_per_frame))
+    ]
+    assert len(validation_steps) == 40
+    assert all(steps == ga.steps_per_frame for steps, _ in validation_steps)
+    assert all(delta == pytest.approx(1 / (ga.fps * ga.speed * ga.steps_per_frame))
+               for _, delta in validation_steps)
+
+
+def test_closing_during_validation_restores_rng_and_stops_transitions():
+    from src.ga.validation import EliteValidator
+
+    validator = EliteValidator(seed=7, games=2)
+    elite = IndividualPlayer()
+    random.seed(41)
+    np.random.seed(41)
+    torch.manual_seed(41)
+    python_state = random.getstate()
+    numpy_state = np.random.get_state()
+    torch_state = torch.random.get_rng_state().clone()
+    run = validator.start(elite, 0)
+
+    run.close()
+
+    assert random.getstate() == python_state
+    assert all(
+        np.array_equal(actual, expected) if isinstance(actual, np.ndarray) else actual == expected
+        for actual, expected in zip(np.random.get_state(), numpy_state)
+    )
+    assert torch.equal(torch.random.get_rng_state(), torch_state)
+
+    ga = GeneticAlgorithm([IndividualPlayer(), IndividualPlayer()], render=True, timeout=1)
+    closed = []
+    ga._validation_run = SimpleNamespace(close=lambda: closed.append(True))
+    ga._rendered_phase = "validation"
+    ga._cancel_rendered_training()
+    ga._update_rendered_training(1 / 60)
+
+    assert closed == [True]
+    assert ga._rendered_phase == "stopped"
+    assert ga.generation == 0
+
+
+def test_rendered_and_headless_validation_share_scenario_metrics():
+    from src.ga.validation import EliteValidator
+
+    validator = EliteValidator(
+        seed=17,
+        games=2,
+        duration_range=(0.01, 0.01),
+        fps=60,
+        speed=1,
+        steps_per_frame=1,
+    )
+    elite = IndividualPlayer()
+    headless_result = validator.evaluate(elite, 3)
+    rendered_game = Game(
+        [elite],
+        timeout=0.01,
+        fps=60,
+        speed=1,
+        steps_per_frame=1,
+    )
+    rendered_run = validator.start(elite, 3, game=rendered_game)
+    step_delta = 1 / 60
+    while not rendered_run.is_complete:
+        rendered_run.advance(1, step_delta)
+
+    assert rendered_run.result == headless_result
+
+
 def test_validation_success_latches_and_does_not_stop_training(tmp_path, monkeypatch):
     population = [IndividualPlayer() for _ in range(4)]
     ga = GeneticAlgorithm(population, output_dir=tmp_path, render=False, timeout=1, validation_games=1)

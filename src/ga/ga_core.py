@@ -83,6 +83,12 @@ class GeneticAlgorithm:
         self.validation_reached = False
         self.validation_status = None
         self.validation_achievement = None
+        self._rendered_game = None
+        self._rendered_phase = None
+        self._rendered_generation_limit = None
+        self._fitness_cursor = 0
+        self._offsprings = []
+        self._validation_run = None
         timestamp = datetime.now().astimezone().strftime("%Y%m%dT%H%M%S.%f")
         self.run_dir = Path(output_dir) / timestamp
         self.generation = 0
@@ -130,6 +136,12 @@ class GeneticAlgorithm:
             "Starting GA for {} generations.",
             runs if runs is not None else "unlimited",
         )
+        if self.render:
+            self._rendered_generation_limit = runs
+            self._begin_rendered_generation(0)
+            self._rendered_game.start()
+            return
+
         generations = range(runs) if runs is not None else count()
         for generation in generations:
             self.generation = generation
@@ -185,20 +197,164 @@ class GeneticAlgorithm:
         for player in self.population:
             player.age += 1
 
+    def _begin_rendered_generation(self, generation: int) -> None:
+        """Start gameplay inside the window already owned by the rendered run."""
+        self.generation = generation
+        logger.info("Generation: {}, Population: {}", generation, self.population_size)
+        for player in self.population:
+            player.reset_scores()
+        random.shuffle(self.population)
+
+        if self._rendered_game is None:
+            from src.game import Game
+
+            self._rendered_game = Game(
+                self.population,
+                timeout=self.timeout,
+                fps=self.fps,
+                speed=self.speed,
+                steps_per_frame=self.steps_per_frame,
+                validation_status=self.validation_status,
+                sound_enabled=self.sound_enabled,
+                generation=generation,
+                training_phase="Generation gameplay",
+            )
+            self._rendered_game.training_update_callback = self._update_rendered_training
+            self._rendered_game.training_close_callback = self._cancel_rendered_training
+        else:
+            # Replacing only the simulation keeps Arcade's window, event loop, and audio owner alive.
+            self._rendered_game.configure_epoch(
+                self.population,
+                timeout=self.timeout,
+                phase="Generation gameplay",
+                generation=generation,
+            )
+            self._rendered_game.validation_status = self.validation_status
+        self._rendered_phase = "gameplay"
+
+    def _update_rendered_training(self, delta_time: float) -> None:
+        """Advance one bounded lifecycle unit from Arcade's main-thread update callback."""
+        game = self._rendered_game
+        if game is None or self._rendered_phase in (None, "stopped", "complete"):
+            return
+
+        # Development proceeds gameplay -> fitness/checkpoints -> elite validation ->
+        # selection/reproduction -> next generation; validation yields after each bounded batch.
+        if self._rendered_phase == "gameplay":
+            game.run_steps(self.steps_per_frame, delta_time / self.steps_per_frame)
+            self._set_display_scores(game)
+            if game.is_finished:
+                for player in self.population:
+                    player.age += 1
+                self._fitness_cursor = 0
+                self._rendered_phase = "fitness"
+                game.training_phase = "Fitness and checkpoints"
+            return
+
+        if self._rendered_phase == "fitness":
+            end = min(self._fitness_cursor + 16, len(self.population))
+            for player in self.population[self._fitness_cursor:end]:
+                player.calculate_fitness()
+            self._fitness_cursor = end
+            if self._fitness_cursor == len(self.population):
+                self._finish_fitness_calculation()
+                self._validation_run = self.validator.start(
+                    self.population[0], self.generation, game=game
+                )
+                self._rendered_phase = "validation"
+                game.training_phase = "Elite validation"
+                game.validation_scenario = 1
+                game.validation_count = self.validator.games
+                game.validation_record = (0, 0, 0)
+                self._set_display_scores(game)
+            return
+
+        if self._rendered_phase == "validation":
+            step_delta = 1.0 / (self.fps * self.speed * self.steps_per_frame)
+            self._validation_run.advance(self.steps_per_frame, step_delta)
+            self._set_display_scores(game)
+            game.validation_scenario = min(
+                self._validation_run.scenario_index + 1, self.validator.games
+            )
+            game.validation_record = self._validation_record_so_far()
+            if self._validation_run.is_complete:
+                result = self._validation_run.result
+                self._validation_run = None
+                self._record_validation(result)
+                self._rendered_phase = "selection"
+                game.training_phase = "Selection"
+                game.validation_scenario = 0
+                game.validation_count = 0
+            return
+
+        if self._rendered_phase == "selection":
+            self.cull_population()
+            self.repopulate()
+            self._rendered_phase = "crossover"
+            game.training_phase = "Crossover"
+            return
+
+        if self._rendered_phase == "crossover":
+            self._offsprings = self.crossover()
+            self._rendered_phase = "mutation"
+            game.training_phase = "Mutation"
+            return
+
+        if self._rendered_phase == "mutation":
+            self.mutate_and_append_to_population(self._offsprings)
+            if (
+                self._rendered_generation_limit is not None
+                and self.generation + 1 >= self._rendered_generation_limit
+            ):
+                self._rendered_phase = "complete"
+                game.training_phase = "Training complete"
+                return
+            self._begin_rendered_generation(self.generation + 1)
+
+    def _set_display_scores(self, game) -> None:
+        display_player = game.get_display_player()
+        if display_player is not None:
+            game.training_scores = {
+                "Player": display_player.scores.get("Player", 0),
+                "CPU": display_player.scores.get("CPU", 0),
+            }
+
+    def _validation_record_so_far(self) -> tuple[int, int, int]:
+        results = self._validation_run.results
+        wins = sum(result["win"] for result in results)
+        losses = sum(result["player_score"] < result["cpu_score"] for result in results)
+        ties = len(results) - wins - losses
+        return wins, losses, ties
+
+    def _cancel_rendered_training(self) -> None:
+        """Closing the sole window cancels validation and prevents future generations."""
+        if self._validation_run is not None:
+            self._validation_run.close()
+            self._validation_run = None
+        self._rendered_phase = "stopped"
+
     def calculate_fitness(self) -> None:
         """Calculate, rank, record, and checkpoint the current generation."""
         logger.info("Calculating fitness...")
         for player in self.population:
             player.calculate_fitness()
 
+        self._finish_fitness_calculation()
+        logger.info("Evaluating generation {} elite on fresh scenarios.", self.generation)
+        result = self.validator.evaluate(self.population[0], self.generation)
+        self._record_validation(result)
+
+    def _finish_fitness_calculation(self) -> None:
+        """Rank and persist an evaluated population before its elite validation."""
         self.population.sort(key=lambda player: player.scores["fitness"], reverse=True)
         if not self.population:
             raise RuntimeError("Cannot calculate fitness for an empty population.")
 
         self._append_metrics(self.generation)
         self.save_generation_samples()
-        logger.info("Evaluating generation {} elite on fresh scenarios.", self.generation)
-        result = self.validator.evaluate(self.population[0], self.generation)
+
+    def _record_validation(self, result: dict) -> None:
+        """Persist shared suite results and latch the success indicator for the window."""
         just_reached = result["reached"] and not self.validation_reached
         self.validation_reached = self.validation_reached or result["reached"]
         if just_reached:
@@ -215,6 +371,8 @@ class GeneticAlgorithm:
                 "shutout_rate": result["shutout_rate"],
             }),
         }
+        if self._rendered_game is not None:
+            self._rendered_game.validation_status = self.validation_status
         result["reached"] = self.validation_reached
         self._append_validation(result)
         logger.info(

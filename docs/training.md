@@ -20,6 +20,22 @@ Headless runs report progress every tenth of each generation, including measured
 
 Rendered `src.main` training and `src.tester` playback use synthesized paddle-hit, wall-bounce, and scoring sounds by default. Use `--no-sound` to mute either rendered command. Headless training does not initialize or play sounds.
 
+## Rendered generation lifecycle
+
+`python -m src.main` keeps one Arcade window open while it moves through
+generation gameplay, fitness and checkpointing, the elite's 20 visible
+validation scenarios, selection, and reproduction. The window shows the
+current generation and phase; during validation it also shows scenario
+progress, the live score, and the accumulated win/loss/tie record. Closing the
+window interrupts the run without launching another generation. A finite
+`--generations` limit leaves the window open with a completion status.
+
+Validation advances in fixed-delta batches so the rendered suite uses the same
+scenario setup, timing, and metrics as headless validation without blocking
+Arcade's event loop for the entire suite. All 20 scenarios are now played
+visibly in rendered runs, so the between-generation portion takes longer than
+headless validation.
+
 ## Checkpoints
 
 Each training run creates a timestamped subdirectory under `runs/` (or the path specified with `--output-dir`). It contains `settings.json`, metrics and validation records, `elite_model.pt`, and top-player checkpoints under `checkpoints/`. Run `python -m src.tester` to load the newest run's elite, or specify a file with `python -m src.tester --checkpoint path\to\model.pt`.
