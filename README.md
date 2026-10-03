@@ -1,35 +1,85 @@
-# AI-Pong v1.3
+# AI-Pong
 
-A Neural Network based Genetic Algorithm finds the optimal solution for playing 2d game, pong.
+[![CI](https://github.com/CodeRSTech/AI-Pong/actions/workflows/ci.yml/badge.svg)](https://github.com/CodeRSTech/AI-Pong/actions/workflows/ci.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
+[![License](https://img.shields.io/github/license/CodeRSTech/AI-Pong)](LICENSE)
 
-## Change log:
-+ Migrated from `pygame` library to `Arcade` library.
-+ `numpy` based perceptron model has been replaced with `torch.NN` module based model.
-+ Neural Net model structure has been changed.
-+ Updated fitness function.
-+ Added visual representation of the Neural Network to the UI.
-+ Visual improvements (ball and paddle have borders)
+AI-Pong uses a genetic algorithm to evolve neural networks that play Pong. Each generation evaluates a population in parallel with batched PyTorch inference; Arcade displays the current population's representative game and network.
 
-### Performance improvements
-+ Entire population's neural networks run in batch, resulting in performance boost.
-+ Only elite player's playzone is displayed on the screen.
-+ A pre-defined number of frames can be skipped before the next frame is rendered.
+**Documentation:** [Read the AI-Pong docs](https://coderstech.github.io/AI-Pong/)
 
+> **Demo GIF:** Not captured yet. See the [feature tracker](#feature-tracker) for how to add one.
 
-+ save each GA run (generational models, logs, possibly settings into a unique place,
-possibly as a folder named by the datetime),
-e.g. If we run with population size 100 on 01.01.1999 4:53AM, we save in folder 01-01-99-04-53-AM where,
-population size is written in a log, along with any other data
+<!-- Demo capture planned: add ![AI-Pong demo](assets/demo.gif) here when a gameplay GIF is recorded. -->
 
-## Installation:
-`pip install -r requirements.txt`
+## Quick start
 
-## FAQ:
-**Q: Scores don't go above a certain threshold.**
+Requires Python 3.10 or newer. From the repository root:
 
-**A: Update `'TIME_OUT': 12` in `src/variables.py` with a value of your choice. 
-This will make a generation last longer.**
+```bash
+python -m venv .venv
+```
 
-### Note:
-The changelog may not accurately represent changes and, some changes may not be listed.
+Activate the virtual environment (`.venv\Scripts\Activate.ps1` in PowerShell or `source .venv/bin/activate` on macOS/Linux), then install dependencies:
 
+```bash
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+Run the genetic algorithm:
+
+```bash
+python -m src.main
+```
+
+To watch a saved elite model, first run training so `elite_model.pt` is saved in the current directory, then run:
+
+```bash
+python -m src.tester
+```
+
+Training runs for up to 1,000 generations with a population of 200. Each generation runs for 12 seconds by default. The elite checkpoint and top generation checkpoints are written relative to the current working directory (`elite_model.pt` and `checkpoints/`).
+
+## Configuration
+
+Defaults in `src/variables.py`:
+
+| Setting | Default | Description |
+| --- | ---: | --- |
+| `WIDTH` | `476` | Width of the play area, in pixels. |
+| `HEIGHT` | `500` | Height of the play area, in pixels. |
+| `FPS` | `144` | Base Arcade update rate; the configured speed also scales the update rate. |
+| `TIME_OUT` | `12` | Generation duration in seconds. Use `-1` for an unbounded interactive game. |
+| `SPEED` | `2.5` | Update-rate and paddle movement speed multiplier. |
+| `PANEL_WIDTH` | `640` | Width of the neural-network visualization panel. |
+
+The starting population size is currently set separately as `initial_population_size` in `src/main.py`. The GA's elite/crossover rates and mutation settings are defined in `src/ga/ga_core.py` and `src/ga/network.py`.
+
+## FAQ
+
+**Scores stop improving. What should I try?**
+
+Increase `TIME_OUT` in `src/variables.py` to give each generation more time to play. Training behavior can also vary with the initial population and random seed.
+
+**Where are my training runs saved?**
+
+The current implementation saves the top two model weights per generation under `checkpoints/` and updates `elite_model.pt`. It does not yet create a separate run directory or save the settings, seed, and metrics alongside each run; see the [roadmap](docs/ROADMAP.md).
+
+**How do I run the tests?**
+
+Install the development extras with `python -m pip install -e ".[dev]"`, then run `pytest`.
+
+## Feature tracker
+
+| Feature | Status |
+| --- | --- |
+| Batched population inference and neural-network visualization | Available |
+| Per-run folders with settings and training metrics | Planned |
+| Gameplay demo GIF | Capture planned |
+
+To add the demo, record a short gameplay session (showing both the play area and network panel), trim it to a few seconds, resize/optimize it as a GIF, and save it as `assets/demo.gif`. Then replace the demo-capture comment near the top of this README with an image link to that file.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, tests, and pull-request guidance. Report bugs or request features using the [repository issue templates](https://github.com/CodeRSTech/AI-Pong/issues/new/choose).
