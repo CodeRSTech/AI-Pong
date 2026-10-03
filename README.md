@@ -6,7 +6,7 @@
 
 AI-Pong uses a genetic algorithm to evolve neural networks that play Pong. Each generation evaluates a population in parallel with batched PyTorch inference; Arcade displays the current population's representative game and network.
 
-**Documentation:** [Read the AI-Pong docs](https://coderstech.github.io/AI-Pong/)
+**Documentation:** [Read the AI-Pong docs](https://coderstech.github.io/projects/ai-pong/)
 
 > **Demo GIF:** Not captured yet. See the [feature tracker](#feature-tracker) for how to add one.
 
