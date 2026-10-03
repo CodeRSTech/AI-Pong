@@ -259,14 +259,14 @@ class IndividualPlayer:
 
     def reset_hit_streak(self) -> None:
         """Reset the streak counter."""
-        self.max_win_streak = max(self.max_hit_streak, self.current_hit_streak)
+        self.max_hit_streak = max(self.max_hit_streak, self.current_hit_streak)
         self.current_hit_streak = 0
 
     # Winning streak. Counts the number of consecutive wins.
     def reset_winning_streak(self) -> None:
         """Reset the streak counter."""
-        self.max_win_streak = max(self.max_win_streak, self.current_hit_streak)
-        self.current_hit_streak = 0
+        self.max_win_streak = max(self.max_win_streak, self.current_win_streak)
+        self.current_win_streak = 0
 
     def reset_scores(self) -> None:
         """
@@ -297,7 +297,6 @@ class IndividualPlayer:
         self.age = 0
         self.reset_scores()  # Call the new helper here
 
-    @property
     def __str__(self) -> str:
         """Readable identity."""
         return 'Player = {0}; fitness = {1}'.format(self.uid, self.scores['fitness'])
