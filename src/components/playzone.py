@@ -6,6 +6,8 @@ This module keeps simulation in y-down space (origin top-left). Rendering
 converts to y-up in draw calls of each entity.
 """
 
+from typing import Callable
+
 from src.utils.functions import skew_ball_direction, create_paddle, create_ball
 from src.components.colors import CPU_ACCENT, PLAYER_ACCENT
 
@@ -21,7 +23,16 @@ class PlayZone:
     """
     ball_speed_magnitude = 5.0
 
-    def __init__(self, width, height, speed, ai_player, best_ai_fitness=0, paddle_width=80):
+    def __init__(
+        self,
+        width,
+        height,
+        speed,
+        ai_player,
+        best_ai_fitness=0,
+        paddle_width=80,
+        sound_event_callback: Callable[[str], None] | None = None,
+    ):
         """
         Args:
             width (int): Width of the play zone.
@@ -35,6 +46,7 @@ class PlayZone:
         self.HEIGHT = height
         self.speed = speed
         self.paddle_width = paddle_width
+        self.sound_event_callback = sound_event_callback
 
         self.ball = create_ball()
         self.cpu_paddle = create_paddle(
@@ -86,18 +98,21 @@ class PlayZone:
         # Wall collisions (left/right): bounce horizontally
         if ball.right > zone.WIDTH or ball.left < 0:
             ball.flip_x()
+            self._emit_sound_event("wall")
             # nudging to avoid sticking to the wall
             ball.update_variables()
 
         # Bottom border crossed, player paddle missed: CPU +1
         if ball.bottom > zone.HEIGHT:
             zone.ai_player.scores['CPU'] += 1
+            self._emit_sound_event("score")
             zone.respawn_ball(ball)
             zone.ai_player.reset_winning_streak()
 
         # Top border crossed, CPU paddle missed: Player +1
         elif ball.top < 0:
             zone.ai_player.scores['Player'] += 1
+            self._emit_sound_event("score")
             zone.respawn_ball(ball)
             zone.ai_player.add_win_to_streak()
 
@@ -137,12 +152,18 @@ class PlayZone:
         ai_player = self.ai_player
         ball.flip_y()
         skew_ball_direction(ball, paddle, is_cpu=player_is_cpu)
+        self._emit_sound_event("paddle")
         if player_is_cpu:
             ai_player.scores['CPU Hits'] += 1
         else:
             ai_player.scores['Player Hits'] += 1
             ai_player.add_hit_to_streak()
         self.update_variables()
+
+    def _emit_sound_event(self, event: str) -> None:
+        """Notify the rendered game; headless zones have no event listener."""
+        if self.sound_event_callback is not None:
+            self.sound_event_callback(event)
 
     def update_variables(self) -> None:
         """

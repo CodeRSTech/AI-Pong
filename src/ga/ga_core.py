@@ -45,6 +45,7 @@ class GeneticAlgorithm:
         speed: float = VARIABLES["SPEED"],
         steps_per_frame: int = VARIABLES["STEPS_PER_FRAME"],
         validation_games: int = 20,
+        sound_enabled: bool = True,
     ):
         if len(population) < 2:
             raise ValueError("The genetic algorithm requires at least two individuals.")
@@ -66,6 +67,7 @@ class GeneticAlgorithm:
         self.population = population
         self.population_size = len(population)
         self.render = render
+        self.sound_enabled = render and sound_enabled
         self.seed = seed
         self.timeout = timeout
         self.fps = fps
@@ -110,6 +112,7 @@ class GeneticAlgorithm:
             "torch_version": str(torch.__version__),
             "torch_device": "cuda" if torch.cuda.is_available() else "cpu",
             "torch_threads": torch.get_num_threads(),
+            "sound_enabled": self.sound_enabled,
             "variables": VARIABLES,
             "validation": {
                 "seed": self.validator.seed,
@@ -158,6 +161,7 @@ class GeneticAlgorithm:
             speed=self.speed,
             steps_per_frame=self.steps_per_frame,
             validation_status=self.validation_status,
+            sound_enabled=self.sound_enabled,
         )
         if self.render:
             self.population = game.start()

@@ -25,4 +25,6 @@ The Arcade window renders only one representative zone alongside its neural-netw
 
 Rendering uses a high-contrast dark court with distinct player/CPU paddle colors and a bright ball halo. Court markings, palette, and network-panel styling are draw-only; they do not feed into observations or change simulation state.
 
+Rendered games generate short paddle-hit, wall-bounce, and scoring tones with Pyglet's synthesis API, so no audio files or new dependencies are needed. Only the displayed zone plays audio, with per-event cooldowns to keep rapid rallies from becoming noisy. Sound is enabled by default in `src.main` and `src.tester`; pass `--no-sound` to either command to disable it. The headless trainer is silent, and audio events do not affect physics or fitness.
+
 After each generation, the best individual is evaluated in fresh games with varied starting positions and directions, duration, and paddle width. Its win and CPU-shutout rates are recorded alongside each run's settings, metrics, elite, and generation checkpoints. Reaching the configured validation target sets a persistent green indicator in the rendered runner; training does not stop. `python -m src.tester` loads the newest run's elite for a one-player, unbounded viewing game.

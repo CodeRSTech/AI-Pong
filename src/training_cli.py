@@ -82,6 +82,7 @@ def run_training(args: argparse.Namespace, *, render: bool) -> int:
         speed=args.speed,
         steps_per_frame=args.steps_per_frame,
         validation_games=args.validation_games,
+        sound_enabled=render and getattr(args, "sound_enabled", False),
     )
     try:
         logger.info(

@@ -11,6 +11,7 @@ Notable project changes are recorded here. This changelog may not include every 
 - Made simulation steps per rendered frame configurable.
 - Added separate rendered and headless training commands, progress updates, and randomized elite validation.
 - Refreshed the rendered court and neural-network panel with higher-contrast colors and distinct paddles.
+- Added generated, rate-limited sound effects to rendered games, with a `--no-sound` option.
 
 ## 1.3.0
 

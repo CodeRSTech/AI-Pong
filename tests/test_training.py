@@ -10,7 +10,7 @@ from src.ga import GeneticAlgorithm
 from src.ga.player import IndividualPlayer
 from src.game import Game
 from src.tester import find_latest_checkpoint, load_player
-from src.training_cli import seed_everything
+from src.training_cli import run_training, seed_everything
 
 
 def test_headless_cli_accepts_training_and_timing_options():
@@ -35,6 +35,9 @@ def test_headless_cli_accepts_training_and_timing_options():
 def test_rendered_runner_is_the_main_default():
     assert main.create_parser().parse_args([]).generations is None
     assert train.create_parser().parse_args([]).generations is None
+    assert main.create_parser().parse_args([]).sound_enabled
+    assert not main.create_parser().parse_args(["--no-sound"]).sound_enabled
+    assert not hasattr(train.create_parser().parse_args([]), "sound_enabled")
 
 
 @pytest.mark.parametrize(("module", "render_expected"), [(main, True), (train, False)])
@@ -52,6 +55,35 @@ def test_entry_points_select_their_expected_render_mode(monkeypatch, module, ren
     )
     assert module.main(["--population", "2", "--generations", "1"]) == 0
     assert rendered == [render_expected]
+
+
+@pytest.mark.parametrize(
+    ("render", "sound_option", "expected"),
+    [(True, True, True), (True, False, False), (False, True, False)],
+)
+def test_training_only_enables_sound_for_unmuted_rendered_runs(
+    monkeypatch, render, sound_option, expected
+):
+    captured = {}
+
+    class FakeGA:
+        def __init__(self, population, **kwargs):
+            captured.update(kwargs)
+            self.run_dir = "test-runs"
+
+        def start(self, generations):
+            pass
+
+    monkeypatch.setattr("src.training_cli.seed_everything", lambda seed: None)
+    monkeypatch.setattr("src.training_cli.torch.set_num_threads", lambda threads: None)
+    monkeypatch.setattr("src.training_cli.IndividualPlayer", object)
+    monkeypatch.setattr("src.training_cli.GeneticAlgorithm", FakeGA)
+    args = main.create_parser().parse_args(
+        ["--population", "2"] + ([] if sound_option else ["--no-sound"])
+    )
+
+    assert run_training(args, render=render) == 0
+    assert captured["sound_enabled"] is expected
 
 
 def test_headless_cli_rejects_unbounded_timeout():
@@ -106,6 +138,7 @@ def test_headless_epoch_uses_configured_time_step(monkeypatch):
     assert captured["settings"]["steps_per_frame"] == steps
     assert captured["step_delta"] == pytest.approx(1 / (fps * speed * steps))
     assert captured["settings"]["validation_status"] is None
+    assert captured["settings"]["sound_enabled"] is False
 
 
 def test_validator_generates_fresh_scenarios_in_configured_ranges(monkeypatch):

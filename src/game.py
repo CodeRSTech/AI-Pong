@@ -14,6 +14,7 @@ from typing import Callable
 import arcade
 import numpy as np
 
+from src.audio import SoundEffects
 from src.components.colors import (
     ARENA_BACKGROUND,
     ARENA_LINE,
@@ -56,6 +57,10 @@ class _PongWindow(arcade.Window):
             title="Pong 2D (Arcade)",
             update_rate=update_rate
         )
+        if self.game.sound_enabled:
+            self.game._sound_effects = SoundEffects()
+            # Lock the visible zone before stepping so event routing never consumes RNG.
+            self.game.get_display_zone()
         self.set_update_rate(update_rate)
         arcade.set_background_color(ARENA_BACKGROUND)
         self.time_running = 0.0  # seconds
@@ -358,7 +363,7 @@ class Game:
     def __init__(self, players, width=VARIABLES['WIDTH'], height=VARIABLES['HEIGHT'],
                  fps=VARIABLES['FPS'], timeout=VARIABLES['TIME_OUT'],
                  speed=VARIABLES['SPEED'], steps_per_frame=VARIABLES['STEPS_PER_FRAME'],
-                 paddle_width=80, validation_status=None):
+                 paddle_width=80, validation_status=None, sound_enabled=False):
 
         if not players:
             raise ValueError("Game requires at least one player.")
@@ -384,6 +389,8 @@ class Game:
         self.paddle_width = paddle_width
         self.timeout = timeout
         self.validation_status = validation_status
+        self.sound_enabled = sound_enabled
+        self._sound_effects = None
         self.players = players
         self.play_width = width
         self.panel_width = VARIABLES.get('PANEL_WIDTH', 260)
@@ -403,11 +410,29 @@ class Game:
                 players[i],
                 best_score,
                 paddle_width=paddle_width,
+                sound_event_callback=(
+                    (
+                        lambda event, zone_index=i: self._dispatch_sound_event(
+                            self.zones[zone_index], event
+                        )
+                    )
+                    if sound_enabled
+                    else None
+                ),
             )
             self.zones.append(zone)
 
         self._window = None
         self._batch_inputs = np.empty((self.num_zones, 7), dtype=np.float32)
+
+    def _dispatch_sound_event(self, zone: PlayZone, event: str) -> None:
+        """Only the visible zone may play audio; sound never affects headless runs."""
+        if (
+            self.sound_enabled
+            and self._sound_effects is not None
+            and zone is self._display_zone
+        ):
+            self._sound_effects.play(event)
 
     def step(self, step_delta: float) -> None:
         """

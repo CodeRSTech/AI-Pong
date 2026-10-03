@@ -44,13 +44,15 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument("--checkpoint", type=Path, help="path to a model weights file")
     parser.add_argument("--runs-dir", type=Path, default=Path("runs"),
                         help="training runs root to search (default: runs)")
+    parser.add_argument("--no-sound", action="store_true",
+                        help="disable generated gameplay sound effects")
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = create_parser().parse_args(argv)
     players = [load_player(args.checkpoint, args.runs_dir)]
-    game = Game(players, timeout=-1)
+    game = Game(players, timeout=-1, sound_enabled=not args.no_sound)
     game.display_score = True
     try:
         game.start()

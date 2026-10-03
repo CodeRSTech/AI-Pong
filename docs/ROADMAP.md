@@ -8,7 +8,7 @@ This roadmap summarizes the project's planned work. Priorities may change as the
 | 1 | Documentation and repository hygiene | Complete | [Contributing](https://github.com/CodeRSTech/AI-Pong/blob/main/CONTRIBUTING.md) |
 | 2 | Reproducible runs, correctness, and a training CLI | Complete | [Training tips](training.md) |
 | 3 | Arcade visuals and effects | Complete | [Architecture](architecture.md) |
-| 4 | Sound effects | Planned | [Architecture](architecture.md) |
+| 4 | Sound effects | Complete | [Architecture](architecture.md) |
 | 5 | Lightweight browser demo | Planned | [README feature tracker](https://github.com/CodeRSTech/AI-Pong#feature-tracker) |
 | 6 | Release process and distribution | Planned | [Changelog](https://github.com/CodeRSTech/AI-Pong/blob/main/CHANGELOG.md) |
 

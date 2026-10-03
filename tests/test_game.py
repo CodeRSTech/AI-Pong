@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 from src.game import Game
 from src.components.geometry import Vec2
 from src.components.colors import CPU_ACCENT, PLAYER_ACCENT
@@ -38,3 +40,24 @@ def test_paddles_use_distinct_render_colors_without_changing_game_state():
 
     assert zone.ai_paddle.color == PLAYER_ACCENT
     assert zone.cpu_paddle.color == CPU_ACCENT
+
+
+def test_only_the_visible_zone_routes_sound_events():
+    game = Game([IndividualPlayer(), IndividualPlayer()], sound_enabled=True)
+    events = []
+    game._sound_effects = SimpleNamespace(play=events.append)
+    game._display_zone = game.zones[0]
+
+    game.zones[0]._emit_sound_event("paddle")
+    game.zones[1]._emit_sound_event("wall")
+
+    assert events == ["paddle"]
+
+
+def test_headless_game_does_not_route_sound_events():
+    game = Game([IndividualPlayer()], sound_enabled=False)
+    events = []
+    game._sound_effects = SimpleNamespace(play=events.append)
+    game.zones[0]._emit_sound_event("score")
+
+    assert events == []

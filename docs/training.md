@@ -18,6 +18,8 @@ Mutation settings are currently code constants rather than CLI options: offsprin
 
 Headless runs report progress every tenth of each generation, including measured simulation steps per second. `--torch-threads` controls PyTorch's CPU intra-op parallelism and defaults to one thread for these small batched networks.
 
+Rendered `src.main` training and `src.tester` playback use synthesized paddle-hit, wall-bounce, and scoring sounds by default. Use `--no-sound` to mute either rendered command. Headless training does not initialize or play sounds.
+
 ## Checkpoints
 
 Each training run creates a timestamped subdirectory under `runs/` (or the path specified with `--output-dir`). It contains `settings.json`, metrics and validation records, `elite_model.pt`, and top-player checkpoints under `checkpoints/`. Run `python -m src.tester` to load the newest run's elite, or specify a file with `python -m src.tester --checkpoint path\to\model.pt`.

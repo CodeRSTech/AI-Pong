@@ -33,6 +33,8 @@ Run the rendered genetic algorithm:
 python -m src.main
 ```
 
+Rendered games use synthesized paddle-hit, wall-bounce, and scoring sounds by default. Disable audio with `python -m src.main --no-sound` or `python -m src.tester --no-sound`; headless training remains silent.
+
 Run headless training with periodic progress output:
 
 ```bash
@@ -85,6 +87,7 @@ Install the development extras with `python -m pip install -e ".[dev]"`, then ru
 | --- | --- |
 | Batched population inference and neural-network visualization | Available |
 | High-contrast Arcade court, distinct paddles, and ball visibility effects | Available |
+| Generated paddle-hit, wall-bounce, and scoring sounds in rendered play | Available |
 | Per-run folders with settings, metrics, validation, and checkpoints | Available |
 | Randomized elite validation and ongoing-training success indicator | Available |
 | Gameplay demo GIF | Capture planned |
