@@ -7,9 +7,13 @@ Creates a window, runs one timed epoch, and returns control to the ga.
 
 import math
 import random
+from math import ceil
+from time import perf_counter
+from typing import Callable
 
 import arcade
 import numpy as np
+
 from src.components.colors import OFF_WHITE, GRAY, LIGHT_GRAY, BLUE, RED
 from src.components.playzone import PlayZone
 from src.ga.network import BatchedPopulationBrain
@@ -66,6 +70,27 @@ class _PongWindow(arcade.Window):
         # --- Only render the Elite Zone ---
         if display_zone is not None:
             display_zone.render_to(window_h)
+
+        status = self.game.validation_status
+        if status and status.get("reached"):
+            success_color = (40, 220, 110)
+            left, right = 3, self.game.play_width - 3
+            bottom, top = 3, self.height - 3
+            arcade.draw_line(left, bottom, right, bottom, success_color, 4)
+            arcade.draw_line(left, top, right, top, success_color, 4)
+            arcade.draw_line(left, bottom, left, top, success_color, 4)
+            arcade.draw_line(right, bottom, right, top, success_color, 4)
+            arcade.draw_text(
+                f"VALIDATION REACHED (gen {status['generation']}) - "
+                f"wins {status['win_rate']:.0%}, shutouts {status['shutout_rate']:.0%}",
+                self.game.play_width // 2,
+                self.height - 24,
+                success_color,
+                13,
+                anchor_x="center",
+                anchor_y="center",
+                bold=True,
+            )
 
         # Optional score overlay for tester (single zone)
         if self.game.num_zones == 1 and self.game.display_score:
@@ -290,7 +315,8 @@ class Game:
 
     def __init__(self, players, width=VARIABLES['WIDTH'], height=VARIABLES['HEIGHT'],
                  fps=VARIABLES['FPS'], timeout=VARIABLES['TIME_OUT'],
-                 speed=VARIABLES['SPEED'], steps_per_frame=VARIABLES['STEPS_PER_FRAME']):
+                 speed=VARIABLES['SPEED'], steps_per_frame=VARIABLES['STEPS_PER_FRAME'],
+                 paddle_width=80, validation_status=None):
 
         if not players:
             raise ValueError("Game requires at least one player.")
@@ -313,7 +339,9 @@ class Game:
         self.fps = fps
         self.speed = speed
         self.steps_per_frame = steps_per_frame
+        self.paddle_width = paddle_width
         self.timeout = timeout
+        self.validation_status = validation_status
         self.players = players
         self.play_width = width
         self.panel_width = VARIABLES.get('PANEL_WIDTH', 260)
@@ -326,26 +354,31 @@ class Game:
         # Build zones (one per player for now; drawn in same space like original)
         best_score = players[0].scores['fitness']
         for i in range(self.num_zones):
-            zone = PlayZone(width,
-                            height,
-                            speed,
-                            players[i],
-                            best_score)
+            zone = PlayZone(
+                width,
+                height,
+                speed,
+                players[i],
+                best_score,
+                paddle_width=paddle_width,
+            )
             self.zones.append(zone)
 
         self._window = None
+        self._batch_inputs = np.empty((self.num_zones, 7), dtype=np.float32)
 
     def step(self, step_delta: float) -> None:
         """
         Advance every zone by one simulation step. Independent of any window.
         """
-        if not math.isfinite(step_delta) or step_delta < 0:
-            raise ValueError("step_delta must be a finite non-negative value.")
+        if not math.isfinite(step_delta) or step_delta <= 0:
+            raise ValueError("step_delta must be a finite positive value.")
         self._ensure_brain()
         self.time_running += step_delta
 
-        all_inputs = np.array([zone.ai_player.look(zone) for zone in self.zones])
-        outputs = self.batched_brain.predict_batch(all_inputs)
+        for index, zone in enumerate(self.zones):
+            zone.ai_player.look_into(zone, self._batch_inputs[index])
+        outputs = self.batched_brain.predict_batch(self._batch_inputs)
 
         for i, zone in enumerate(self.zones):
             zone.ai_player.apply_move(zone, bool(outputs[i][0]), bool(outputs[i][1]))
@@ -364,16 +397,32 @@ class Game:
     def is_finished(self) -> bool:
         return self.timeout != -1 and self.time_running >= self.timeout
 
-    def run_headless(self, step_delta: float = 1.0 / 60) -> list:
+    def run_headless(
+        self,
+        step_delta: float = 1.0 / 60,
+        progress_callback: Callable[[int, int, float], None] | None = None,
+    ) -> list:
         """
-        Run the whole epoch without a window (requires a finite timeout).
+        Run the whole epoch without a window; optionally report step progress.
         """
         if self.timeout == -1:
             raise ValueError("run_headless requires a finite timeout")
         if not math.isfinite(step_delta) or step_delta <= 0:
             raise ValueError("step_delta must be a finite positive value.")
+        total_steps = max(1, ceil(self.timeout / step_delta))
+        progress_interval = max(1, total_steps // 10)
+        next_progress_step = progress_interval
+        started_at = perf_counter()
+        completed_steps = 0
         while not self.is_finished:
             self.step(step_delta)
+            completed_steps += 1
+            if progress_callback and (
+                completed_steps >= next_progress_step or self.is_finished
+            ):
+                progress_callback(completed_steps, total_steps, perf_counter() - started_at)
+                while next_progress_step <= completed_steps:
+                    next_progress_step += progress_interval
         return self.players
 
     def _ensure_brain(self) -> None:

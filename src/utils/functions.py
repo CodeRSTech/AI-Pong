@@ -155,7 +155,7 @@ def timeit(func):
     return wrapper
 
 
-def create_paddle(screen_width, screen_height, color, is_cpu=False) -> Paddle:
+def create_paddle(screen_width, screen_height, color, is_cpu=False, width=80) -> Paddle:
     """
     Create a paddle positioned at top (CPU) or bottom (Player).
 
@@ -167,7 +167,7 @@ def create_paddle(screen_width, screen_height, color, is_cpu=False) -> Paddle:
     """
     left = screen_width // 2
     top = 0 if is_cpu else screen_height - 10
-    paddle = Paddle(left, top, 80, 10)
+    paddle = Paddle(left, top, width, 10)
     paddle.color = color
     paddle.pos_x = left
     return paddle

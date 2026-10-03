@@ -2,7 +2,9 @@
 """
 AI Player driven by a tiny neural network.
 """
+import math
 import uuid
+
 import numpy as np
 from src.ga.network import NeuralNet
 from src.utils.functions import squash
@@ -35,28 +37,32 @@ class IndividualPlayer:
 
     @staticmethod
     def look(zone) -> np.ndarray:
+        inputs = np.empty(7)
+        IndividualPlayer.look_into(zone, inputs)
+        return inputs
+
+    @staticmethod
+    def look_into(zone, inputs: np.ndarray) -> None:
+        """Fill a reusable seven-value observation buffer."""
         ball = zone.ball
         ai_paddle = zone.ai_paddle
 
         ball_distance_x = ball.pos_x - ai_paddle.pos_x
         ball_distance_y = ball.pos_y - ai_paddle.pos_y
 
-        ball_speed = ball.speed.magnitude()
+        ball_speed = math.hypot(ball.speed.x, ball.speed.y)
 
         zone_width = zone.WIDTH
         zone_height = zone.HEIGHT
 
         # Normalize inputs relative to zone dimensions
-        inputs_list = np.array([
-            ball_distance_x / zone_width,
-            ball_distance_y / zone_height,
-            (ai_paddle.pos_x * 2.0 - zone_width) / zone_width,  # Paddle position normalized
-            (ball.pos_x * 2.0 - zone_width) / zone_width,  # Ball X normalized
-            (ball.pos_y * 2.0 - zone_height) / zone_height,  # Ball Y normalized
-            ball.speed.x / ball_speed,
-            ball.speed.y / ball_speed
-        ])
-        return inputs_list
+        inputs[0] = ball_distance_x / zone_width
+        inputs[1] = ball_distance_y / zone_height
+        inputs[2] = (ai_paddle.pos_x * 2.0 - zone_width) / zone_width
+        inputs[3] = (ball.pos_x * 2.0 - zone_width) / zone_width
+        inputs[4] = (ball.pos_y * 2.0 - zone_height) / zone_height
+        inputs[5] = ball.speed.x / ball_speed
+        inputs[6] = ball.speed.y / ball_speed
 
     def think(self, inputs_list) -> np.ndarray:
         """

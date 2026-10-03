@@ -156,7 +156,7 @@ class BatchedPopulationBrain:
         Takes (Pop, Inputs), returns boolean (Pop, Outputs).
         """
         # Shape becomes (Pop, 1, In)
-        x = torch.tensor(input_array, dtype=torch.float32, device=self.device).unsqueeze(1)
+        x = torch.as_tensor(input_array, dtype=torch.float32, device=self.device).unsqueeze(1)
 
         with torch.no_grad():
             for w, b, act in zip(self.W, self.B, self.acts):

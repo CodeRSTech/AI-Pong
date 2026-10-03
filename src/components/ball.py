@@ -34,7 +34,6 @@ class Ball(Rectangle):
         """
         self.pos_x += self.speed.x
         self.pos_y += self.speed.y
-        self.center = (self.pos_x, self.pos_y)
 
     def set_speed(self, value: Vec2) -> None:
         """

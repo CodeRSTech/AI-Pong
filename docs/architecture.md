@@ -21,4 +21,6 @@ Each `IndividualPlayer` uses a fully connected `7 → 8 → 6 → 2` neural netw
 
 `Game` owns one `PlayZone` per player. A game step gathers each player's observations, evaluates the batch, applies actions, and advances the zones. `TIME_OUT` ends an epoch after the configured elapsed duration.
 
-The Arcade window renders only one representative zone alongside its neural-network visualization; the rest of the population continues to be simulated. Each run's settings, metrics, elite, and generation checkpoints are saved in its timestamped run folder. `python -m src.tester` loads the newest run's elite for a one-player, unbounded viewing game.
+The Arcade window renders only one representative zone alongside its neural-network visualization; the rest of the population continues to be simulated. Use `python -m src.main` for the rendered training runner or `python -m src.train` for headless training with progress logs. Both continue until interrupted unless `--generations` sets a limit.
+
+After each generation, the best individual is evaluated in fresh games with varied starting positions and directions, duration, and paddle width. Its win and CPU-shutout rates are recorded alongside each run's settings, metrics, elite, and generation checkpoints. Reaching the configured validation target sets a persistent green indicator in the rendered runner; training does not stop. `python -m src.tester` loads the newest run's elite for a one-player, unbounded viewing game.

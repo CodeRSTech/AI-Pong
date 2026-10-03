@@ -11,7 +11,7 @@ python -m pip install -r requirements.txt
 python -m src.main
 ```
 
-To view the most recently saved elite model, run `python -m src.tester`. Training stores it in that run's timestamped directory.
+`python -m src.main` opens the rendered training runner. For headless runs with periodic progress reports, use `python -m src.train`. Both run continuously until interrupted unless `--generations` sets a limit. To view the most recently saved elite model, run `python -m src.tester`.
 
 ## Publishing this site
 

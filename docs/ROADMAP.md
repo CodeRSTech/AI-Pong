@@ -6,7 +6,7 @@ This roadmap summarizes the project's planned work. Priorities may change as the
 | --- | --- | --- | --- |
 | 0 | Foundation: packaging, tests, and CI | Complete | [CI workflow](https://github.com/CodeRSTech/AI-Pong/blob/main/.github/workflows/ci.yml) |
 | 1 | Documentation and repository hygiene | Complete | [Contributing](https://github.com/CodeRSTech/AI-Pong/blob/main/CONTRIBUTING.md) |
-| 2 | Reproducible runs, correctness, and a training CLI | In progress | [Training tips](training.md) |
+| 2 | Reproducible runs, correctness, and a training CLI | Complete | [Training tips](training.md) |
 | 3 | Arcade visuals and effects | Planned | [Architecture](architecture.md) |
 | 4 | Sound effects | Planned | [Architecture](architecture.md) |
 | 5 | Lightweight browser demo | Planned | [README feature tracker](https://github.com/CodeRSTech/AI-Pong#feature-tracker) |

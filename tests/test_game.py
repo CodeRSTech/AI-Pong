@@ -1,4 +1,5 @@
 from src.game import Game
+from src.components.geometry import Vec2
 from src.ga.player import IndividualPlayer
 
 
@@ -17,3 +18,14 @@ def test_step_moves_the_ball():
     game.step(1 / 60)
     assert (ball.pos_x, ball.pos_y) != before
     assert not game.is_finished
+
+
+def test_paddle_collision_counts_edge_touch_as_a_hit():
+    game = Game([IndividualPlayer()], width=400, height=500, timeout=-1)
+    zone = game.zones[0]
+    zone.ball.center = (zone.ai_paddle.pos_x, zone.ai_paddle.top - zone.ball.height / 2)
+    zone.ball.speed = Vec2(0, 2)
+
+    zone.check_collisions()
+
+    assert zone.ai_player.scores["Player Hits"] == 1

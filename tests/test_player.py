@@ -1,5 +1,7 @@
+import numpy as np
 import pytest
 
+from src.game import Game
 from src.ga.player import IndividualPlayer
 
 
@@ -8,6 +10,17 @@ def test_new_player_has_architecture_and_zeroed_scores():
     assert len(p.neural_net.layers) == 3
     assert p.scores['fitness'] == 0
     assert p.scores['Player'] == 0
+
+
+def test_look_into_matches_allocating_observation():
+    player = IndividualPlayer()
+    zone = Game([player], width=400, height=500, timeout=-1).zones[0]
+    expected = player.look(zone)
+    reusable = np.empty(7, dtype=np.float32)
+
+    player.look_into(zone, reusable)
+
+    np.testing.assert_allclose(reusable, expected, rtol=1e-7)
 
 
 def test_reset_hit_streak_tracks_max_hit_streak():

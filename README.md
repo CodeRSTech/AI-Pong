@@ -27,19 +27,27 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-Run the genetic algorithm:
+Run the rendered genetic algorithm:
 
 ```bash
 python -m src.main
 ```
 
-To watch a saved elite model, first run training so `elite_model.pt` is saved in the current directory, then run:
+Run headless training with periodic progress output:
+
+```bash
+python -m src.train
+```
+
+Both commands train continuously until interrupted by `Ctrl+C`; use `--generations` to set a limit. Each generation validates its elite on 20 fresh scenarios. The rendered runner shows a green border once an elite wins at least 95% of scenarios and shuts out the CPU in at least 90%; training continues after that target is reached.
+
+To watch a saved elite model, run:
 
 ```bash
 python -m src.tester
 ```
 
-Training runs for up to 1,000 generations with a population of 200. Each generation runs for 12 seconds by default. Each run creates a timestamped folder under `runs/` containing settings, per-generation metrics, and checkpoints. Use `python -m src.main --help` to see CLI options. `python -m src.tester` loads the latest run's elite; use `--checkpoint` to select a specific model.
+Each run creates a timestamped folder under `runs/` containing settings, per-generation metrics, validation results, and checkpoints. Use `python -m src.train --help` or `python -m src.main --help` to see CLI options. `python -m src.tester` loads the latest run's elite; use `--checkpoint` to select a specific model.
 
 ## Configuration
 
@@ -55,7 +63,7 @@ Defaults in `src/variables.py`:
 | `STEPS_PER_FRAME` | `15` | Simulation steps evaluated on each Arcade update. |
 | `PANEL_WIDTH` | `640` | Width of the neural-network visualization panel. |
 
-The approximate simulation workload is `FPS × SPEED × STEPS_PER_FRAME` steps per second; the per-step time increment keeps the timeout in elapsed seconds. Population size, generations, seed, timeout, rendering, and timing values can be set from the training CLI; see `python -m src.main --help`. The GA's elite/crossover rates and mutation settings are defined in `src/ga/ga_core.py` and `src/ga/network.py`.
+The approximate simulation workload is `FPS × SPEED × STEPS_PER_FRAME` steps per second; the per-step time increment keeps the timeout in elapsed seconds. Population size, generations, seed, timeout, and timing values can be set from either CLI; see `python -m src.train --help`. Validation randomizes positions and ball direction, game duration (6–18 seconds), and paddle width (50–120 pixels). The GA's elite/crossover rates and mutation settings are defined in `src/ga/ga_core.py` and `src/ga/network.py`.
 
 ## FAQ
 
@@ -76,7 +84,8 @@ Install the development extras with `python -m pip install -e ".[dev]"`, then ru
 | Feature | Status |
 | --- | --- |
 | Batched population inference and neural-network visualization | Available |
-| Per-run folders with settings and training metrics | Planned |
+| Per-run folders with settings, metrics, validation, and checkpoints | Available |
+| Randomized elite validation and ongoing-training success indicator | Available |
 | Gameplay demo GIF | Capture planned |
 
 To add the demo, record a short gameplay session (showing both the play area and network panel), trim it to a few seconds, resize/optimize it as a GIF, and save it as `assets/demo.gif`. Then replace the demo-capture comment near the top of this README with an image link to that file.

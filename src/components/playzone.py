@@ -20,7 +20,7 @@ class PlayZone:
     """
     ball_speed_magnitude = 5.0
 
-    def __init__(self, width, height, speed, ai_player, best_ai_fitness=0):
+    def __init__(self, width, height, speed, ai_player, best_ai_fitness=0, paddle_width=80):
         """
         Args:
             width (int): Width of the play zone.
@@ -33,10 +33,11 @@ class PlayZone:
         self.WIDTH = width
         self.HEIGHT = height
         self.speed = speed
+        self.paddle_width = paddle_width
 
         self.ball = create_ball()
-        self.cpu_paddle = create_paddle(width, height, self.ball.color, is_cpu=True)
-        self.ai_paddle = create_paddle(width, height, self.ball.color)
+        self.cpu_paddle = create_paddle(width, height, self.ball.color, is_cpu=True, width=paddle_width)
+        self.ai_paddle = create_paddle(width, height, self.ball.color, width=paddle_width)
         self.ai_player = ai_player
         self.best_ai_fitness = best_ai_fitness
 
@@ -95,11 +96,32 @@ class PlayZone:
             zone.respawn_ball(ball)
             zone.ai_player.add_win_to_streak()
 
-        # Paddle collisions
-        if self.ball.collide_rect(self.ai_paddle):
+        # Inline the AABB checks: these run for every paddle in every zone,
+        # at every simulation step.
+        ball_left = ball.pos_x - ball.width / 2
+        ball_right = ball.pos_x + ball.width / 2
+        ball_top = ball.pos_y - ball.height / 2
+        ball_bottom = ball.pos_y + ball.height / 2
+        ai_paddle = self.ai_paddle
+        if not (
+            ball_right < ai_paddle.pos_x - ai_paddle.width / 2
+            or ball_left > ai_paddle.pos_x + ai_paddle.width / 2
+            or ball_bottom < ai_paddle.pos_y - ai_paddle.height / 2
+            or ball_top > ai_paddle.pos_y + ai_paddle.height / 2
+        ):
             self.handle_collision(self.ball, self.ai_paddle)
 
-        if self.ball.collide_rect(self.cpu_paddle):
+        ball_left = ball.pos_x - ball.width / 2
+        ball_right = ball.pos_x + ball.width / 2
+        ball_top = ball.pos_y - ball.height / 2
+        ball_bottom = ball.pos_y + ball.height / 2
+        cpu_paddle = self.cpu_paddle
+        if not (
+            ball_right < cpu_paddle.pos_x - cpu_paddle.width / 2
+            or ball_left > cpu_paddle.pos_x + cpu_paddle.width / 2
+            or ball_bottom < cpu_paddle.pos_y - cpu_paddle.height / 2
+            or ball_top > cpu_paddle.pos_y + cpu_paddle.height / 2
+        ):
             self.handle_collision(self.ball, self.cpu_paddle, player_is_cpu=True)
 
     def handle_collision(self, ball, paddle, player_is_cpu=False) -> None:
@@ -122,8 +144,6 @@ class PlayZone:
         Update the variables of game elements after each update.
         """
         self.ball.update_variables()
-        self.ai_paddle.update_variables()
-        self.cpu_paddle.update_variables()
 
     def render_to(self, window_height: float) -> None:
         """

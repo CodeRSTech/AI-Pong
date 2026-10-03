@@ -16,6 +16,6 @@ class Paddle(Rectangle):
 
     def update_variables(self) -> None:
         """
-        Keep center in sync with current position.
+        Compatibility hook; paddle position is already stored at its center.
         """
-        self.center = (self.pos_x, self.pos_y)
+        pass

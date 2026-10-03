@@ -81,6 +81,20 @@ def test_generation_metrics_and_checkpoints_are_saved(tmp_path):
     population[0].scores.update({"Player": 2, "Player Hits": 3})
     population[1].scores.update({"CPU": 1, "CPU Hits": 2})
     ga = GeneticAlgorithm(population, output_dir=tmp_path, render=False, timeout=1)
+    ga.validator.evaluate = lambda elite, generation: {
+        "generation": generation,
+        "games": 20,
+        "wins": 19,
+        "losses": 1,
+        "ties": 0,
+        "win_rate": 0.95,
+        "shutouts": 18,
+        "shutout_rate": 0.9,
+        "win_rate_target": 0.95,
+        "shutout_rate_target": 0.9,
+        "reached": True,
+        "scenarios": [],
+    }
 
     ga.generation = 4
     ga.calculate_fitness()
@@ -91,6 +105,7 @@ def test_generation_metrics_and_checkpoints_are_saved(tmp_path):
     assert rows[0]["generation"] == "4"
     assert (ga.run_dir / "elite_model.pt").is_file()
     assert (ga.run_dir / "checkpoints" / "p0gen4.pt").is_file()
+    assert (ga.run_dir / "validation.csv").is_file()
 
 
 def test_start_writes_reproducibility_settings(tmp_path):

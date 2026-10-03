@@ -9,6 +9,7 @@ Notable project changes are recorded here. This changelog may not include every 
 - Updated the viewer to locate the latest run's elite model or accept an explicit checkpoint path.
 - Improved crossover to always select a non-empty contiguous neuron range and inherit the selected neurons' outgoing weights.
 - Made simulation steps per rendered frame configurable.
+- Added separate rendered and headless training commands, progress updates, and randomized elite validation.
 
 ## 1.3.0
 

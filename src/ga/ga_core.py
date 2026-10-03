@@ -9,6 +9,7 @@ import random
 import sys
 from copy import deepcopy
 from datetime import datetime
+from itertools import count
 from pathlib import Path
 from statistics import mean, median
 
@@ -16,6 +17,7 @@ import numpy as np
 import torch
 
 from src.ga.player import IndividualPlayer
+from src.ga.validation import EliteValidator
 from src.utils import logger
 from src.utils.functions import two_point_crossover
 from src.variables import VARIABLES
@@ -42,6 +44,7 @@ class GeneticAlgorithm:
         fps: float = VARIABLES["FPS"],
         speed: float = VARIABLES["SPEED"],
         steps_per_frame: int = VARIABLES["STEPS_PER_FRAME"],
+        validation_games: int = 20,
     ):
         if len(population) < 2:
             raise ValueError("The genetic algorithm requires at least two individuals.")
@@ -68,13 +71,23 @@ class GeneticAlgorithm:
         self.fps = fps
         self.speed = speed
         self.steps_per_frame = steps_per_frame
+        self.validator = EliteValidator(
+            seed=seed if seed is not None else random.randrange(2**32),
+            games=validation_games,
+            fps=fps,
+            speed=speed,
+            steps_per_frame=steps_per_frame,
+        )
+        self.validation_reached = False
+        self.validation_status = None
+        self.validation_achievement = None
         timestamp = datetime.now().astimezone().strftime("%Y%m%dT%H%M%S.%f")
         self.run_dir = Path(output_dir) / timestamp
         self.generation = 0
 
-    def start(self, runs: int = 1000) -> None:
-        """Run the requested number of generations."""
-        if runs < 1:
+    def start(self, runs: int | None = None) -> None:
+        """Run generations until interrupted or the optional limit is reached."""
+        if runs is not None and runs < 1:
             raise ValueError("runs must be at least 1.")
         self.run_dir.mkdir(parents=True, exist_ok=False)
         configuration = {
@@ -96,13 +109,26 @@ class GeneticAlgorithm:
             "numpy_version": np.__version__,
             "torch_version": str(torch.__version__),
             "torch_device": "cuda" if torch.cuda.is_available() else "cpu",
+            "torch_threads": torch.get_num_threads(),
             "variables": VARIABLES,
+            "validation": {
+                "seed": self.validator.seed,
+                "games": self.validator.games,
+                "duration_range_seconds": self.validator.duration_range,
+                "paddle_width_range_pixels": self.validator.paddle_width_range,
+                "win_rate_target": self.validator.win_rate_target,
+                "shutout_rate_target": self.validator.shutout_rate_target,
+            },
         }
         (self.run_dir / "settings.json").write_text(
             json.dumps(configuration, indent=2) + "\n", encoding="utf-8"
         )
-        logger.info("Starting GA for up to {} generations.", runs)
-        for generation in range(runs):
+        logger.info(
+            "Starting GA for {} generations.",
+            runs if runs is not None else "unlimited",
+        )
+        generations = range(runs) if runs is not None else count()
+        for generation in generations:
             self.generation = generation
             logger.info("Generation: {}, Population: {}", generation, self.population_size)
             self.selection()
@@ -131,10 +157,26 @@ class GeneticAlgorithm:
             fps=self.fps,
             speed=self.speed,
             steps_per_frame=self.steps_per_frame,
+            validation_status=self.validation_status,
         )
-        self.population = game.start() if self.render else game.run_headless(
-            step_delta=1.0 / (self.fps * self.speed * self.steps_per_frame)
-        )
+        if self.render:
+            self.population = game.start()
+        else:
+            step_delta = 1.0 / (self.fps * self.speed * self.steps_per_frame)
+
+            def report_progress(steps: int, total: int, elapsed: float) -> None:
+                simulated_seconds = min(steps * step_delta, self.timeout)
+                rate = steps / elapsed if elapsed else 0
+                logger.info(
+                    "Generation {} simulation: {:.0%} ({:.3f}/{:.3f}s, {:.0f} steps/s)",
+                    self.generation,
+                    min(steps / total, 1.0),
+                    simulated_seconds,
+                    self.timeout,
+                    rate,
+                )
+
+            self.population = game.run_headless(step_delta, report_progress)
 
         for player in self.population:
             player.age += 1
@@ -151,7 +193,61 @@ class GeneticAlgorithm:
 
         self._append_metrics(self.generation)
         self.save_generation_samples()
+        logger.info("Evaluating generation {} elite on fresh scenarios.", self.generation)
+        result = self.validator.evaluate(self.population[0], self.generation)
+        just_reached = result["reached"] and not self.validation_reached
+        self.validation_reached = self.validation_reached or result["reached"]
+        if just_reached:
+            self.validation_achievement = {
+                "generation": self.generation,
+                "win_rate": result["win_rate"],
+                "shutout_rate": result["shutout_rate"],
+            }
+        self.validation_status = {
+            "reached": self.validation_reached,
+            **(self.validation_achievement or {
+                "generation": self.generation,
+                "win_rate": result["win_rate"],
+                "shutout_rate": result["shutout_rate"],
+            }),
+        }
+        result["reached"] = self.validation_reached
+        self._append_validation(result)
+        logger.info(
+            "Elite validation: wins {:.0%} ({}/{}), CPU shutouts {:.0%} ({}/{}).",
+            result["win_rate"],
+            result["wins"],
+            result["games"],
+            result["shutout_rate"],
+            result["shutouts"],
+            result["games"],
+        )
+        if just_reached:
+            logger.success(
+                "Validation target reached; training continues. Rendered status will be green."
+            )
         self.print_scores()
+
+    def _append_validation(self, result: dict) -> None:
+        fields = (
+            "generation", "games", "wins", "losses", "ties", "win_rate",
+            "shutouts", "shutout_rate", "win_rate_target",
+            "shutout_rate_target", "reached",
+        )
+        path = self.run_dir / "validation.csv"
+        write_header = not path.exists()
+        with path.open("a", newline="", encoding="utf-8") as validation_file:
+            writer = csv.DictWriter(validation_file, fieldnames=fields)
+            if write_header:
+                writer.writeheader()
+            writer.writerow({field: result[field] for field in fields})
+
+        scenario_path = self.run_dir / "validation_scenarios.jsonl"
+        with scenario_path.open("a", encoding="utf-8") as scenario_file:
+            scenario_file.write(json.dumps({
+                "generation": result["generation"],
+                "scenarios": result["scenarios"],
+            }) + "\n")
 
     def _append_metrics(self, generation: int) -> None:
         best = self.population[0]
