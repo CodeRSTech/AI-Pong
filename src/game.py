@@ -30,7 +30,7 @@ class _PongWindow(arcade.Window):
     network_output_labels = ["Left", "Right"]
     steps_per_frame = 15
 
-    def __init__(self, game_ref: Game):
+    def __init__(self, game_ref: "Game"):
         self.game = game_ref
         update_rate = 1.0 / max(1, int(self.game.fps * self.game.speed))
         super().__init__(
@@ -85,30 +85,14 @@ class _PongWindow(arcade.Window):
         if self._exiting:
             return
 
-        # Run 30 physics steps for every 1 visual frame
-        steps_per_frame = self.steps_per_frame
-        step_delta = delta_time / steps_per_frame
+        game = self.game
+        step_delta = delta_time / self.steps_per_frame
+        game.run_steps(self.steps_per_frame, step_delta)
+        self.time_running = game.time_running
 
-        for _ in range(steps_per_frame):
-            self.time_running += step_delta
-
-            # --- 1. THE GATHER PHASE ---
-            all_inputs = np.array([zone.ai_player.look(zone) for zone in self.game.zones])
-
-            # --- 2. THE PREDICT PHASE ---
-            outputs = self.game.batched_brain.predict_batch(all_inputs)
-
-            # --- 3. THE SCATTER PHASE ---
-            for i, zone in enumerate(self.game.zones):
-                move_left = bool(outputs[i][0])
-                move_right = bool(outputs[i][1])
-                zone.ai_player.apply_move(zone, move_left, move_right)
-                zone.update()
-
-            if self.game.timeout != -1 and self.time_running >= self.game.timeout:
-                self._exiting = True
-                arcade.exit()
-                return  # Exit immediately, stopping the sub-step loop
+        if game.is_finished:
+            self._exiting = True
+            arcade.exit()
 
     def _draw_network_panel(self) -> None:
         panel_left = self.game.play_width
@@ -306,6 +290,7 @@ class Game:
                  speed=VARIABLES['SPEED']):
         
         self.batched_brain = None
+        self.time_running = 0.0
         self.display_score = False
         self.fps = fps
         self.speed = speed
@@ -330,6 +315,47 @@ class Game:
             self.zones.append(zone)
 
         self._window = None
+
+    def step(self, step_delta: float) -> None:
+        """
+        Advance every zone by one simulation step. Independent of any window.
+        """
+        self._ensure_brain()
+        self.time_running += step_delta
+
+        all_inputs = np.array([zone.ai_player.look(zone) for zone in self.zones])
+        outputs = self.batched_brain.predict_batch(all_inputs)
+
+        for i, zone in enumerate(self.zones):
+            zone.ai_player.apply_move(zone, bool(outputs[i][0]), bool(outputs[i][1]))
+            zone.update()
+
+    def run_steps(self, count: int, step_delta: float) -> None:
+        """
+        Run up to `count` steps, stopping early once the timeout is reached.
+        """
+        for _ in range(count):
+            self.step(step_delta)
+            if self.is_finished:
+                return
+
+    @property
+    def is_finished(self) -> bool:
+        return self.timeout != -1 and self.time_running >= self.timeout
+
+    def run_headless(self, step_delta: float = 1.0 / 60) -> list:
+        """
+        Run the whole epoch without a window (requires a finite timeout).
+        """
+        if self.timeout == -1:
+            raise ValueError("run_headless requires a finite timeout")
+        while not self.is_finished:
+            self.step(step_delta)
+        return self.players
+
+    def _ensure_brain(self) -> None:
+        if self.batched_brain is None:
+            self.batched_brain = BatchedPopulationBrain(self.players)
 
     def get_display_player(self):
         if self._display_player is not None:
@@ -386,6 +412,7 @@ class Game:
         """
         # --- Compile the Batched 3D Tensor Brain for this generation ---
         self.batched_brain = BatchedPopulationBrain(self.players)
+        self.time_running = 0.0
 
         self._window = _PongWindow(self)
         arcade.run()

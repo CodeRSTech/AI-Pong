@@ -7,7 +7,6 @@ import random
 from copy import deepcopy
 
 from src.ga.player import IndividualPlayer
-from src.game import Game
 from src.utils import logger
 from src.utils.functions import two_point_crossover
 
@@ -72,6 +71,7 @@ class GeneticAlgorithm:
             player.reset_scores()
 
         random.shuffle(self.population)
+        from src.game import Game  # deferred: src.game imports src.ga.network
         game = Game(self.population)
         self.population = game.start()
 
