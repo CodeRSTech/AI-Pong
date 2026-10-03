@@ -31,62 +31,64 @@ class ActivationsMismatchError(SyntaxError):
 
 def two_point_crossover(player_1, player_2):
     """
-    Two-point crossover for PyTorch-based NeuralNet.
+    Crossover contiguous neurons, including each selected neuron's outgoing
+    weights in the following layer.
     """
 
-    from src.ga.player import IndividualPlayer
-    from src.ga.network import NeuralNet
-    import torch
+    from copy import deepcopy
 
-    new_player = IndividualPlayer()
-    new_net = NeuralNet()
+    from src.ga.player import IndividualPlayer
+    import torch
 
     net1 = player_1.neural_net
     net2 = player_2.neural_net
+    if not net1.layers or len(net1.layers) != len(net2.layers):
+        raise ValueError("Parents must have matching neural-network architectures.")
 
     for layer1, layer2 in zip(net1.layers, net2.layers):
+        linear1, linear2 = layer1[0], layer2[0]
+        if linear1.weight.shape != linear2.weight.shape or type(layer1[1]) is not type(layer2[1]):
+            raise ValueError("Parents must have matching neural-network architectures.")
 
-        linear1 = layer1[0]
-        linear2 = layer2[0]
+    total_neurons = sum(layer[0].out_features for layer in net1.layers)
+    cross_points = sorted(torch.randperm(total_neurons + 1)[:2].tolist())
+    inherited_neurons = set(range(cross_points[0], cross_points[1]))
 
-        w1 = linear1.weight.data.clone()
-        w2 = linear2.weight.data.clone()
-        b1 = linear1.bias.data.clone()
-        b2 = linear2.bias.data.clone()
+    new_player = IndividualPlayer()
+    new_net = deepcopy(net1)
+    neuron_offset = 0
+    previous_mask = None
 
-        out_features, in_features = w1.shape
+    with torch.no_grad():
+        for layer1, layer2, child_layer in zip(net1.layers, net2.layers, new_net.layers):
+            parent1_linear = layer1[0]
+            parent2_linear = layer2[0]
+            child_linear = child_layer[0]
+            out_features = parent1_linear.out_features
+            selected = [
+                neuron_offset + neuron_index in inherited_neurons
+                for neuron_index in range(out_features)
+            ]
+            row_mask = torch.tensor(selected, dtype=torch.bool, device=child_linear.weight.device)
 
-        # Choose crossover rows (neurons)
-        cross_points = sorted(torch.randperm(out_features)[:2].tolist())
+            child_linear.weight.copy_(parent1_linear.weight)
+            child_linear.bias.copy_(parent1_linear.bias)
+            child_linear.weight[row_mask] = parent2_linear.weight[row_mask]
+            child_linear.bias[row_mask] = parent2_linear.bias[row_mask]
 
-        new_w = w1.clone()
-        new_b = b1.clone()
+            if previous_mask is not None:
+                column_mask = torch.tensor(
+                    previous_mask, dtype=torch.bool, device=child_linear.weight.device
+                )
+                child_linear.weight[:, column_mask] = parent2_linear.weight[:, column_mask]
 
-        for i in range(out_features):
-            if cross_points[0] <= i < cross_points[1]:
-                new_w[i] = w2[i]
-                new_b[i] = b2[i]
+            previous_mask = selected
+            neuron_offset += out_features
 
-        # Detect activation type from second module
-        activation_module = layer1[1]
-        if isinstance(activation_module, torch.nn.ReLU):
-            activation = "relu"
-        elif isinstance(activation_module, torch.nn.Tanh):
-            activation = "tanh"
-        else:
-            activation = "binary"
-
-        new_net.add_layer(
-            size=in_features,
-            output_size=out_features,
-            activation=activation
-        )
-
-        # Set weights
-        new_layer_linear = new_net.layers[-1][0]
-        new_layer_linear.weight.data = new_w
-        new_layer_linear.bias.data = new_b
-
+    new_net.last_input = None
+    new_net.last_activations = None
+    new_net.last_output_raw = None
+    new_net.last_output_binary = None
     new_player.neural_net = new_net
     return new_player
 

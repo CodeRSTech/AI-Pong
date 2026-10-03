@@ -1,39 +1,64 @@
-
 """
-Visualize a saved (elite) player in a single-zone infinite game.
+Visualize the elite from a saved run or a specified PyTorch checkpoint.
 """
 
-import random
+import argparse
+from pathlib import Path
 
 from src.ga.player import IndividualPlayer
 from src.game import Game
 from src.utils import logger
 
-random.seed(38345343)
 
-
-def load_player() -> IndividualPlayer:
-    """
-    Load player from a single PyTorch weights file (state_dict).
-    """
-    player = IndividualPlayer()
-    checkpoint_path = "elite_model.pt"
-    try:
-        player.neural_net.load_weights(checkpoint_path)
-    except FileNotFoundError:
-        raise FileNotFoundError(
-            f"Checkpoint '{checkpoint_path}' not found. "
-            f"Save a model with player.neural_net.save_weights('{checkpoint_path}') first."
+def find_latest_checkpoint(runs_dir: Path = Path("runs")) -> Path:
+    """Find the newest run's elite model, retaining support for legacy output."""
+    candidates = list(runs_dir.glob("*/elite_model.pt"))
+    if candidates:
+        return max(
+            candidates,
+            key=lambda path: (path.parent.name, path.stat().st_mtime_ns),
         )
+
+    legacy_checkpoint = Path("elite_model.pt")
+    if legacy_checkpoint.is_file():
+        return legacy_checkpoint
+    raise FileNotFoundError(
+        f"No elite checkpoint found under '{runs_dir}' or in the current directory. "
+        "Train a model with 'python -m src.main' first, or provide --checkpoint."
+    )
+
+
+def load_player(checkpoint_path: Path | None = None, runs_dir: Path = Path("runs")) -> IndividualPlayer:
+    """Load an elite player from an explicit checkpoint or the latest run."""
+    checkpoint = checkpoint_path if checkpoint_path is not None else find_latest_checkpoint(runs_dir)
+    if not checkpoint.is_file():
+        raise FileNotFoundError(f"Checkpoint '{checkpoint}' does not exist.")
+
+    player = IndividualPlayer()
+    player.neural_net.load_weights(str(checkpoint))
     return player
 
 
-if __name__ == "__main__":
-    players = [load_player()]
+def create_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Watch an AI-Pong elite checkpoint.")
+    parser.add_argument("--checkpoint", type=Path, help="path to a model weights file")
+    parser.add_argument("--runs-dir", type=Path, default=Path("runs"),
+                        help="training runs root to search (default: runs)")
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = create_parser().parse_args(argv)
+    players = [load_player(args.checkpoint, args.runs_dir)]
     game = Game(players, timeout=-1)
     game.display_score = True
     try:
         game.start()
     except KeyboardInterrupt:
-        logger.info("Game interrupted by user. Exiting...")
-        exit(0)
+        logger.info("Game interrupted by user.")
+        return 130
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

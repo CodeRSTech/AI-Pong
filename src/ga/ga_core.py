@@ -1,228 +1,261 @@
-# src/ga_core.py
 """
-Genetic Algorithm core: selection, crossover, mutation, and population management.
+Genetic algorithm core: selection, crossover, mutation, and run artifacts.
 """
 
+import csv
+import json
+import math
 import random
+import sys
 from copy import deepcopy
+from datetime import datetime
+from pathlib import Path
+from statistics import mean, median
+
+import numpy as np
+import torch
 
 from src.ga.player import IndividualPlayer
 from src.utils import logger
 from src.utils.functions import two_point_crossover
+from src.variables import VARIABLES
+
 
 class GeneticAlgorithm:
-    """
-    A class representing core functionality of the Genetic Algorithm.
-    """
-    # Elite factor decides what percentage of top individuals will be retained onto the next gen.
-    elite_factor = 0.1
-    # Crossover rate determines what percentage of individuals will join the mating pool.
-    crossover_rate = 0.4
+    """Manage one population and persist its training run."""
 
-    def __init__(self, population: list[IndividualPlayer]):
-        """
-        Initialize a Genetic Algorithm with Initial Population `population`.
-        """
+    elite_factor = 0.1
+    crossover_rate = 0.4
+    metric_fields = (
+        "generation", "best_fitness", "mean_fitness", "median_fitness",
+        "player_score", "cpu_score", "player_hits", "cpu_hits",
+    )
+
+    def __init__(
+        self,
+        population: list[IndividualPlayer],
+        *,
+        output_dir: str | Path = "runs",
+        render: bool = True,
+        seed: int | None = None,
+        timeout: float = VARIABLES["TIME_OUT"],
+        fps: float = VARIABLES["FPS"],
+        speed: float = VARIABLES["SPEED"],
+        steps_per_frame: int = VARIABLES["STEPS_PER_FRAME"],
+    ):
+        if len(population) < 2:
+            raise ValueError("The genetic algorithm requires at least two individuals.")
+        if (
+            not math.isfinite(fps)
+            or not math.isfinite(speed)
+            or fps <= 0
+            or speed <= 0
+            or not math.isfinite(fps * speed)
+            or steps_per_frame < 1
+            or not math.isfinite(fps * speed * steps_per_frame)
+        ):
+            raise ValueError("fps, speed, and steps_per_frame must be positive.")
+        if not math.isfinite(timeout) or (timeout <= 0 and timeout != -1):
+            raise ValueError("timeout must be positive, or -1 for an unbounded game.")
+        if not render and timeout == -1:
+            raise ValueError("Headless training requires a finite positive timeout.")
+
         self.population = population
         self.population_size = len(population)
+        self.render = render
+        self.seed = seed
+        self.timeout = timeout
+        self.fps = fps
+        self.speed = speed
+        self.steps_per_frame = steps_per_frame
+        timestamp = datetime.now().astimezone().strftime("%Y%m%dT%H%M%S.%f")
+        self.run_dir = Path(output_dir) / timestamp
+        self.generation = 0
 
-    def start(self, runs=1000) -> None:
-        """
-        Run the Genetic Algorithm for a given number of generations.
-
-        For each generation, 3 key steps are executed:
-
-        - Selection,
-        - Crossover and,
-        - Mutation.
-        """
-        logger.info("Starting GA... "
-                    "will run for upto {0} generations.".format(runs))
-        # TODO: the `i` variable here, referred to as `gen_idx` in `selection` method,
-        #  `calculate_fitness` method and, finally, `save_generation_samples`.
-        #  This appears to be unnecessary and thus requires rectification.
-        for i in range(runs):
-            logger.info("Generation: {0}, Population: {1}".format(i, self.population_size))
-            self.selection(i)
+    def start(self, runs: int = 1000) -> None:
+        """Run the requested number of generations."""
+        if runs < 1:
+            raise ValueError("runs must be at least 1.")
+        self.run_dir.mkdir(parents=True, exist_ok=False)
+        configuration = {
+            "created_at": datetime.now().astimezone().isoformat(),
+            "seed": self.seed,
+            "population_size": self.population_size,
+            "generations": runs,
+            "render": self.render,
+            "timeout_seconds": self.timeout,
+            "fps": self.fps,
+            "speed": self.speed,
+            "steps_per_frame": self.steps_per_frame,
+            "output_directory": str(self.run_dir),
+            "elite_factor": self.elite_factor,
+            "crossover_rate": self.crossover_rate,
+            "mutation_scale": 0.2,
+            "mutation_probability": 0.1,
+            "python_version": sys.version.split()[0],
+            "numpy_version": np.__version__,
+            "torch_version": str(torch.__version__),
+            "torch_device": "cuda" if torch.cuda.is_available() else "cpu",
+            "variables": VARIABLES,
+        }
+        (self.run_dir / "settings.json").write_text(
+            json.dumps(configuration, indent=2) + "\n", encoding="utf-8"
+        )
+        logger.info("Starting GA for up to {} generations.", runs)
+        for generation in range(runs):
+            self.generation = generation
+            logger.info("Generation: {}, Population: {}", generation, self.population_size)
+            self.selection()
             offsprings = self.crossover()
             self.mutate_and_append_to_population(offsprings)
 
-    def selection(self, gen_idx: int) -> None:
-        """
-        Run game for one generation, evaluate individual fitness, and prepare the next generation.
-        """
+    def selection(self) -> None:
+        """Run one epoch, calculate fitness, and prepare the next population."""
         self.epoch()
         logger.info("Performing selection...")
-        try:
-            self.calculate_fitness(gen_idx)
-            self.cull_population()
-            self.repopulate()
-        # FIXME: Too broad exception clause
-        except LookupError:
-            logger.opt(exception=True).error("LookupError")
-            exit(0)
+        self.calculate_fitness()
+        self.cull_population()
+        self.repopulate()
 
     def epoch(self) -> None:
-        """
-        Play the game for one generation.
-        """
-        # Reset scores for ALL players (survivors + offspring + new pupils)
+        """Play one generation, with or without an Arcade window."""
         for player in self.population:
             player.reset_scores()
 
         random.shuffle(self.population)
-        from src.game import Game  # deferred: src.game imports src.ga.network
-        game = Game(self.population)
-        self.population = game.start()
+        from src.game import Game
+
+        game = Game(
+            self.population,
+            timeout=self.timeout,
+            fps=self.fps,
+            speed=self.speed,
+            steps_per_frame=self.steps_per_frame,
+        )
+        self.population = game.start() if self.render else game.run_headless(
+            step_delta=1.0 / (self.fps * self.speed * self.steps_per_frame)
+        )
 
         for player in self.population:
             player.age += 1
 
-    def calculate_fitness(self, gen_idx: int) -> None:
-        """
-        Calculate fitness for every player and persist the elite.
-        """
+    def calculate_fitness(self) -> None:
+        """Calculate, rank, record, and checkpoint the current generation."""
         logger.info("Calculating fitness...")
         for player in self.population:
-            try:
-                player.calculate_fitness()
-            except KeyError:
-                logger.opt(exception=True).error("Unable to read a certain key while calculating fitness,"
-                                                 "setting fitness score to zero.")
-                player.scores['fitness'] = 0
+            player.calculate_fitness()
 
-        self.population = sorted(self.population,
-                                 key=lambda player_i: player_i.scores['fitness'],
-                                 reverse=True)
+        self.population.sort(key=lambda player: player.scores["fitness"], reverse=True)
+        if not self.population:
+            raise RuntimeError("Cannot calculate fitness for an empty population.")
 
-        # TODO: Make this method get `gen_idx` from parent class (i.e. self),
-        #  rather than having to pass it down through multiple parent methods.
-        self.save_generation_samples(gen_idx)  # <-- Call the new save method
+        self._append_metrics(self.generation)
+        self.save_generation_samples()
         self.print_scores()
 
+    def _append_metrics(self, generation: int) -> None:
+        best = self.population[0]
+        values = {
+            "generation": generation,
+            "best_fitness": best.scores["fitness"],
+            "mean_fitness": mean(player.scores["fitness"] for player in self.population),
+            "median_fitness": median(player.scores["fitness"] for player in self.population),
+            "player_score": best.scores["Player"],
+            "cpu_score": best.scores["CPU"],
+            "player_hits": best.scores["Player Hits"],
+            "cpu_hits": best.scores["CPU Hits"],
+        }
+        self.run_dir.mkdir(parents=True, exist_ok=True)
+        metrics_path = self.run_dir / "metrics.csv"
+        write_header = not metrics_path.exists()
+        with metrics_path.open("a", newline="", encoding="utf-8") as metrics_file:
+            writer = csv.DictWriter(metrics_file, fieldnames=self.metric_fields)
+            if write_header:
+                writer.writeheader()
+            writer.writerow(values)
+
     def cull_population(self) -> None:
+        """Keep elite copies and retain fitter members for reproduction."""
         population = self.population
-        # Get the fittest individual...
-        # Since fitness is calculated AND,
-        # population is sorted by fitness in decreasing order,
-        # the fittest individual lies at index 0 while,
-        # the weakest individual lies at the last index, i.e. -1 .
+        if not population:
+            raise RuntimeError("Cannot select survivors from an empty population.")
+
         fittest = population[0]
         weakest = population[-1]
-
-        # Get elites (top players)
-        num_elites = int(len(population) * self.elite_factor)
+        num_elites = max(1, int(len(population) * self.elite_factor))
         elites = population[:num_elites]
-        logger.info("Elite players chosen: {0}".format(num_elites))
+        logger.info("Elite players chosen: {}", num_elites)
 
         max_score = fittest.get_fitness()
         min_score = weakest.get_fitness()
         score_range = max_score - min_score
-
-        # NEW!!! elites are now kept as a deep copy
-        survivors = (deepcopy(elites) +
-                     deepcopy(elites) +
-                     deepcopy(elites))
+        survivors = deepcopy(elites) + deepcopy(elites) + deepcopy(elites)
 
         for player in population:
             player_score = player.get_fitness()
-
-            # Shift scores safely
-            if score_range > 0:
-                favourable_factor = (player_score - min_score) / score_range
-            else:
-                favourable_factor = 0.1  # 10% chance to survive if everyone is tied
-
+            favourable_factor = (
+                (player_score - min_score) / score_range if score_range > 0 else 0.1
+            )
             if random.random() < favourable_factor:
                 survivors.append(player)
 
         self.population = survivors
 
     def repopulate(self) -> None:
-        """
-        Adjust population back to the configured size.
-        Adds if short; trims if over (removes worst at the tail).
-        """
+        """Restore the population to its configured size."""
         logger.info("Repopulating population...")
-        population = self.population
-        target_size = self.population_size
-        current_size = len(population)
-        logger.debug("Target population size is {0}, current size is {1}".format(target_size, current_size))
+        current_size = len(self.population)
+        if current_size < self.population_size:
+            self.population.extend(
+                IndividualPlayer() for _ in range(self.population_size - current_size)
+            )
+        elif current_size > self.population_size:
+            del self.population[self.population_size:]
 
-        if current_size < target_size:
-            logger.info("Adding new pupils...")
-            need = target_size - current_size
-            for _ in range(need):
-                new_pupil = IndividualPlayer()
-                population.append(new_pupil)
-        elif current_size > target_size:
-            logger.info("Removing the worst...")
-            # Trim excess (assumes population is already sorted by fitness descending)
-            del population[target_size:]
-
-    def crossover(self) -> list:
-        """
-        Perform crossover and return new offsprings.
-        """
+    def crossover(self) -> list[IndividualPlayer]:
+        """Create paired offspring from the top-ranked mating pool."""
         logger.info("Performing crossover...")
-        offsprings = []
-        num_to_mate = int(self.population_size * self.crossover_rate)
+        num_to_mate = min(self.population_size, max(2, int(self.population_size * self.crossover_rate)))
+        if num_to_mate % 2:
+            num_to_mate += 1 if num_to_mate < self.population_size else -1
 
-        if num_to_mate % 2 != 0:
-            num_to_mate += 1
-            logger.warning("Mating pool size is not even. Adding one more individual to mate.")
         mating_pool = self.population[:num_to_mate]
-
-        logger.debug("Mating pool size is {0}, maintaining diversity...".format(num_to_mate))
         random.shuffle(mating_pool)
+        offsprings = []
+        for index in range(0, len(mating_pool), 2):
+            parent_1, parent_2 = mating_pool[index:index + 2]
+            offsprings.extend((
+                two_point_crossover(parent_1, parent_2),
+                two_point_crossover(parent_2, parent_1),
+            ))
 
-        for i in range(0, len(mating_pool), 2):
-            try:
-                parent_1, parent_2 = mating_pool[i], mating_pool[i+1]
-            except IndexError:
-                logger.opt(exception=True).error("CRITICAL ERROR:\n"
-                                                 "Index error occurred while attempting to crossover.\n"
-                                                 "Are there sufficient individuals in the mating pool?"
-                                                 " (current mating pool size = {0}.".format(len(mating_pool)))
-                exit(-1)
-            else:
-                offspring1 = two_point_crossover(parent_1, parent_2)
-                offspring2 = two_point_crossover(parent_2, parent_1)
-                offsprings.extend([offspring1, offspring2])
-
-        logger.debug("Number of Offsprings: {0}".format(len(offsprings)))
+        logger.debug("Number of offsprings: {}", len(offsprings))
         return offsprings
 
     def mutate_and_append_to_population(self, offsprings: list[IndividualPlayer]) -> None:
-        """
-        Mutate each offspring, reset defaults, and append to population.
-        """
+        """Reset and mutate offspring, replacing the weakest population members."""
         for offspring in offsprings:
             offspring.reset_defaults()
-            # Stronger exploration for children
             offspring.neural_net.mutate(mutation_scale=0.2)
-            self.population.append(offspring)
+        offspring = offsprings[:self.population_size]
+        survivors = self.population[:self.population_size - len(offspring)]
+        self.population = survivors + offspring
+        self.repopulate()
 
-    def save_generation_samples(self, gen_idx: int, top_n: int = 2) -> None:
-        """
-        Save the top N players of the current generation to a checkpoints' folder.
-        """
-        import os
-        os.makedirs("checkpoints", exist_ok=True)
+    def save_generation_samples(self, top_n: int = 2) -> None:
+        """Save the generation's top checkpoints and its current elite."""
+        if not self.population:
+            raise RuntimeError("Cannot save checkpoints for an empty population.")
+        if top_n < 0:
+            raise ValueError("top_n cannot be negative.")
 
-        # Save top N individuals (p0gen0, p1gen0, etc.)
-        for rank in range(min(top_n, len(self.population))):
-            player = self.population[rank]
-            path = f"checkpoints/p{rank}gen{gen_idx}.pt"
-            player.neural_net.save_weights(path)
-
-        # Continue saving the overall best for tester.py
-        self.population[0].neural_net.save_weights("elite_model.pt")
-
+        checkpoint_dir = self.run_dir / "checkpoints"
+        checkpoint_dir.mkdir(parents=True, exist_ok=True)
+        for rank, player in enumerate(self.population[:top_n]):
+            player.neural_net.save_weights(checkpoint_dir / f"p{rank}gen{self.generation}.pt")
+        self.population[0].neural_net.save_weights(self.run_dir / "elite_model.pt")
 
     def print_scores(self) -> None:
-        """
-        Print scores of the current generation.
-        """
-        for i in range(1):
-            print(f"P{i}: {self.population[i].get_scores()}\n")
+        """Print the best individual's fitness breakdown."""
+        if self.population:
+            print(f"P0: {self.population[0].get_scores()}\n")

@@ -5,7 +5,10 @@ Game orchestration using Arcade.
 Creates a window, runs one timed epoch, and returns control to the ga.
 """
 
-import arcade, random
+import math
+import random
+
+import arcade
 import numpy as np
 from src.components.colors import OFF_WHITE, GRAY, LIGHT_GRAY, BLUE, RED
 from src.components.playzone import PlayZone
@@ -28,11 +31,10 @@ class _PongWindow(arcade.Window):
                             "Ball pos x", "Ball pos y",
                             "Ball speed x", "Ball speed y"]
     network_output_labels = ["Left", "Right"]
-    steps_per_frame = 15
 
     def __init__(self, game_ref: "Game"):
         self.game = game_ref
-        update_rate = 1.0 / max(1, int(self.game.fps * self.game.speed))
+        update_rate = 1.0 / (self.game.fps * self.game.speed)
         super().__init__(
             width=self.game.play_width + self.game.panel_width,
             height=self.game.height,
@@ -86,8 +88,9 @@ class _PongWindow(arcade.Window):
             return
 
         game = self.game
-        step_delta = delta_time / self.steps_per_frame
-        game.run_steps(self.steps_per_frame, step_delta)
+        steps_per_frame = game.steps_per_frame
+        step_delta = delta_time / steps_per_frame
+        game.run_steps(steps_per_frame, step_delta)
         self.time_running = game.time_running
 
         if game.is_finished:
@@ -287,13 +290,29 @@ class Game:
 
     def __init__(self, players, width=VARIABLES['WIDTH'], height=VARIABLES['HEIGHT'],
                  fps=VARIABLES['FPS'], timeout=VARIABLES['TIME_OUT'],
-                 speed=VARIABLES['SPEED']):
+                 speed=VARIABLES['SPEED'], steps_per_frame=VARIABLES['STEPS_PER_FRAME']):
+
+        if not players:
+            raise ValueError("Game requires at least one player.")
+        if (
+            not math.isfinite(fps)
+            or not math.isfinite(speed)
+            or fps <= 0
+            or speed <= 0
+            or not math.isfinite(fps * speed)
+            or steps_per_frame < 1
+            or not math.isfinite(fps * speed * steps_per_frame)
+        ):
+            raise ValueError("fps, speed, and steps_per_frame must be positive.")
+        if not math.isfinite(timeout) or (timeout <= 0 and timeout != -1):
+            raise ValueError("timeout must be positive, or -1 for an unbounded game.")
         
         self.batched_brain = None
         self.time_running = 0.0
         self.display_score = False
         self.fps = fps
         self.speed = speed
+        self.steps_per_frame = steps_per_frame
         self.timeout = timeout
         self.players = players
         self.play_width = width
@@ -320,6 +339,8 @@ class Game:
         """
         Advance every zone by one simulation step. Independent of any window.
         """
+        if not math.isfinite(step_delta) or step_delta < 0:
+            raise ValueError("step_delta must be a finite non-negative value.")
         self._ensure_brain()
         self.time_running += step_delta
 
@@ -349,6 +370,8 @@ class Game:
         """
         if self.timeout == -1:
             raise ValueError("run_headless requires a finite timeout")
+        if not math.isfinite(step_delta) or step_delta <= 0:
+            raise ValueError("step_delta must be a finite positive value.")
         while not self.is_finished:
             self.step(step_delta)
         return self.players

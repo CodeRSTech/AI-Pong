@@ -54,12 +54,6 @@ class PlayZone:
         """
         Move the CPU paddle to track the ball when ball is moving upwards.
         """
-        # FIXME: This CPU Move logic is rather flawed...
-        #  ideally, the paddle moves faster when ball is in close proximity.
-        #  otherwise the paddle just procrastinates and moves slowly.
-
-        # TODO: revisit original, base version and see how the CPU Move implementation differs.
-        #  After that, re-integrate that into this version.
         cpu_paddle = self.cpu_paddle
         ball = self.ball
 
@@ -121,7 +115,6 @@ class PlayZone:
         else:
             ai_player.scores['Player Hits'] += 1
             ai_player.add_hit_to_streak()
-        # TODO: Update variables here to avoid ball sticking to the paddle.
         self.update_variables()
 
     def update_variables(self) -> None:
@@ -152,8 +145,6 @@ class PlayZone:
 
         self.ai_player.reset_hit_streak()
         # Re-seed position
-        # TODO: New coordinates should be random within a 'safe-space' that is close to the center,
-        #  both horizontally and vertically
         ball.pos_x = randint(10, self.WIDTH - 10)
         ball.pos_y = randint(self.HEIGHT // 2 - 100, self.HEIGHT // 2 + 100)
 
@@ -171,4 +162,3 @@ class PlayZone:
         vx = (0.3 + 0.5 * random()) * choice([-1.0, 1.0]) * self.ball_speed_magnitude * 0.4
         vy = vy_sign * (self.ball_speed_magnitude * (1.0 - abs(vx) / self.ball_speed_magnitude))
         ball.speed = Vec2(vx, vy)
-

@@ -39,7 +39,7 @@ To watch a saved elite model, first run training so `elite_model.pt` is saved in
 python -m src.tester
 ```
 
-Training runs for up to 1,000 generations with a population of 200. Each generation runs for 12 seconds by default. The elite checkpoint and top generation checkpoints are written relative to the current working directory (`elite_model.pt` and `checkpoints/`).
+Training runs for up to 1,000 generations with a population of 200. Each generation runs for 12 seconds by default. Each run creates a timestamped folder under `runs/` containing settings, per-generation metrics, and checkpoints. Use `python -m src.main --help` to see CLI options. `python -m src.tester` loads the latest run's elite; use `--checkpoint` to select a specific model.
 
 ## Configuration
 
@@ -49,12 +49,13 @@ Defaults in `src/variables.py`:
 | --- | ---: | --- |
 | `WIDTH` | `476` | Width of the play area, in pixels. |
 | `HEIGHT` | `500` | Height of the play area, in pixels. |
-| `FPS` | `144` | Base Arcade update rate; the configured speed also scales the update rate. |
+| `FPS` | `144` | Base Arcade update rate; multiplied by `SPEED` to determine the window update rate. |
 | `TIME_OUT` | `12` | Generation duration in seconds. Use `-1` for an unbounded interactive game. |
 | `SPEED` | `2.5` | Update-rate and paddle movement speed multiplier. |
+| `STEPS_PER_FRAME` | `15` | Simulation steps evaluated on each Arcade update. |
 | `PANEL_WIDTH` | `640` | Width of the neural-network visualization panel. |
 
-The starting population size is currently set separately as `initial_population_size` in `src/main.py`. The GA's elite/crossover rates and mutation settings are defined in `src/ga/ga_core.py` and `src/ga/network.py`.
+The approximate simulation workload is `FPS × SPEED × STEPS_PER_FRAME` steps per second; the per-step time increment keeps the timeout in elapsed seconds. Population size, generations, seed, timeout, rendering, and timing values can be set from the training CLI; see `python -m src.main --help`. The GA's elite/crossover rates and mutation settings are defined in `src/ga/ga_core.py` and `src/ga/network.py`.
 
 ## FAQ
 
@@ -64,7 +65,7 @@ Increase `TIME_OUT` in `src/variables.py` to give each generation more time to p
 
 **Where are my training runs saved?**
 
-The current implementation saves the top two model weights per generation under `checkpoints/` and updates `elite_model.pt`. It does not yet create a separate run directory or save the settings, seed, and metrics alongside each run; see the [roadmap](docs/ROADMAP.md).
+Each run is saved under `runs/<timestamp>/`, including `settings.json`, `metrics.csv`, the elite checkpoint, and top generation checkpoints. Use `python -m src.tester` to watch the newest elite.
 
 **How do I run the tests?**
 
