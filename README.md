@@ -24,5 +24,12 @@ population size is written in a log, along with any other data
 ## Installation:
 `pip install -r requirements.txt`
 
+## FAQ:
+**Q: Scores don't go above a certain threshold.**
+
+**A: Update `'TIME_OUT': 12` in `src/variables.py` with a value of your choice. 
+This will make a generation last longer.**
+
 ### Note:
 The changelog may not accurately represent changes and, some changes may not be listed.
+
