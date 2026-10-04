@@ -40,6 +40,16 @@ def test_rendered_runner_is_the_main_default():
     assert not hasattr(train.create_parser().parse_args([]), "sound_enabled")
 
 
+def test_validation_defaults_to_two_games_and_accepts_larger_suites():
+    from src.ga.validation import EliteValidator
+
+    for module in (main, train):
+        assert module.create_parser().parse_args([]).validation_games == 2
+        assert module.create_parser().parse_args(["--validation-games", "20"]).validation_games == 20
+    assert EliteValidator(seed=23).games == 2
+    assert GeneticAlgorithm([IndividualPlayer(), IndividualPlayer()]).validator.games == 2
+
+
 @pytest.mark.parametrize(("module", "render_expected"), [(main, True), (train, False)])
 def test_entry_points_select_their_expected_render_mode(monkeypatch, module, render_expected):
     rendered = []
@@ -180,7 +190,7 @@ def test_validator_generates_fresh_scenarios_in_configured_ranges(monkeypatch):
             self.player.scores["CPU"] = int(scenario_index >= self.shutout_count)
 
     monkeypatch.setattr("src.game.Game", FakeGame)
-    validator = EliteValidator(seed=23)
+    validator = EliteValidator(seed=23, games=20)
     scenarios = validator.scenarios_for(0)
     elite = IndividualPlayer()
 

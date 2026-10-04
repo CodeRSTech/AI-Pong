@@ -30,7 +30,7 @@ class EliteValidator:
         self,
         *,
         seed: int,
-        games: int = 20,
+        games: int = 2,
         duration_range: tuple[float, float] = (6.0, 18.0),
         paddle_width_range: tuple[int, int] = (50, 120),
         win_rate_target: float = 0.95,

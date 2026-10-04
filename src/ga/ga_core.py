@@ -44,7 +44,7 @@ class GeneticAlgorithm:
         fps: float = VARIABLES["FPS"],
         speed: float = VARIABLES["SPEED"],
         steps_per_frame: int = VARIABLES["STEPS_PER_FRAME"],
-        validation_games: int = 20,
+        validation_games: int = 2,
         sound_enabled: bool = True,
     ):
         if len(population) < 2:

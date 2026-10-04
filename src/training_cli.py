@@ -31,8 +31,8 @@ def add_training_arguments(parser: argparse.ArgumentParser) -> None:
                         help=f"simulation steps per frame (default: {VARIABLES['STEPS_PER_FRAME']})")
     parser.add_argument("--torch-threads", type=int, default=1,
                         help="PyTorch intra-op CPU threads (default: 1 for small batched networks)")
-    parser.add_argument("--validation-games", type=int, default=20,
-                        help="fresh randomized elite-validation games per generation (default: 20)")
+    parser.add_argument("--validation-games", type=int, default=2,
+                        help="fresh randomized elite-validation games per generation (default: 2)")
 
 
 def validate_arguments(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
