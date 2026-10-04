@@ -1,4 +1,4 @@
-name: Deploy documentation
+name: Deploy GitHub Pages
 
 on:
   push:
@@ -7,9 +7,11 @@ on:
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
 
 concurrency:
-  group: publish-user-site-docs
+  group: pages
   cancel-in-progress: false
 
 jobs:
@@ -17,7 +19,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
-      url: https://coderstech.github.io/projects/AI-Pong/docs/
+      url: https://coderstech.github.io/AI-Pong/
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,49 +36,19 @@ jobs:
       - name: Build documentation
         run: |
           export SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)"
-          mkdocs build --strict
+          mkdocs build --strict --site-dir site/docs
 
-      - name: Check publishing credentials
-        env:
-          PAGES_TOKEN: ${{ secrets.PAGES_TOKEN }}
-        run: |
-          if [ -z "$PAGES_TOKEN" ]; then
-            echo "::error::Set PAGES_TOKEN with Contents read/write access to CodeRSTech/coderstech.github.io."
-            exit 1
-          fi
-
-      - name: Check out user Pages site
-        uses: actions/checkout@v4
-        with:
-          repository: CodeRSTech/coderstech.github.io
-          ref: main
-          token: ${{ secrets.PAGES_TOKEN }}
-          path: pages-repository
-
-      - name: Sync documentation
-        shell: bash
+      - name: Assemble Pages artifact
         run: |
           set -euo pipefail
-          test -s site/index.html
-          for path in pages-repository/projects pages-repository/projects/AI-Pong pages-repository/projects/AI-Pong/docs; do
-            if [ -L "$path" ]; then
-              echo "::error::Refusing to publish through a symlink: $path"
-              exit 1
-            fi
-          done
-          mkdir -p pages-repository/projects/AI-Pong/docs
-          rsync -a --delete site/ pages-repository/projects/AI-Pong/docs/
+          test -s index.html
+          test -s site/docs/index.html
+          cp index.html site/index.html
 
-      - name: Commit and publish documentation
-        working-directory: pages-repository
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- projects/AI-Pong/docs
-          if git diff --cached --quiet; then
-            echo "Documentation is unchanged."
-            exit 0
-          fi
-          git commit -m "Update AI-Pong documentation from ${GITHUB_SHA}"
-          git pull --rebase origin main
-          git push origin HEAD:main
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="AI-Pong evolves neural networks to play Pong with a genetic algorithm.">
+    <title>AI-Pong</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: system-ui, sans-serif;
+        background: #101820;
+        color: #f4f7fa;
+      }
+
+      body {
+        box-sizing: border-box;
+        display: grid;
+        min-height: 100vh;
+        margin: 0;
+        padding: 2rem;
+        place-items: center;
+      }
+
+      main {
+        max-width: 42rem;
+        padding: 3rem;
+        border: 1px solid #34424e;
+        border-radius: 1rem;
+        background: #18232d;
+      }
+
+      h1 {
+        margin-top: 0;
+        color: #54d6e8;
+        font-size: clamp(2.5rem, 8vw, 4rem);
+      }
+
+      p {
+        color: #c4d0da;
+        font-size: 1.125rem;
+        line-height: 1.6;
+      }
+
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 2rem;
+      }
+
+      a {
+        display: inline-block;
+        padding: 0.8rem 1rem;
+        border-radius: 0.5rem;
+        background: #54d6e8;
+        color: #101820;
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      a:focus-visible {
+        outline: 3px solid #fff;
+        outline-offset: 3px;
+      }
+
+      a.secondary {
+        border: 1px solid #617482;
+        background: transparent;
+        color: #f4f7fa;
+      }
+
+      @media (max-width: 36rem) {
+        body {
+          padding: 1rem;
+        }
+
+        main {
+          padding: 2rem 1.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>AI-Pong</h1>
+      <p>
+        A genetic algorithm evolves neural networks to play Pong. Explore how
+        the simulation, training, and evolutionary process work—or dive into
+        the Python project.
+      </p>
+      <nav aria-label="Project links">
+        <a href="./docs/">Read the documentation</a>
+        <a class="secondary" href="https://github.com/CodeRSTech/AI-Pong">View on GitHub</a>
+      </nav>
+    </main>
+  </body>
+</html>
