@@ -20,7 +20,17 @@ class NetworkExample:
     activations: list[str]
     inputs: tuple[str, ...]
     actions: tuple[str, ...]
+    observation: np.ndarray
     values: list[np.ndarray]
+    preactivations: list[np.ndarray]
+    weights: list[np.ndarray]
+    biases: list[np.ndarray]
+    focused_neuron: int
+    focused_contributions: np.ndarray
+    focused_bias: float
+    focused_preactivation: float
+    focused_activation: float
+    dominant_sources: list[list[int]]
     decisions: list[bool]
 
 
@@ -46,8 +56,56 @@ def network_example() -> NetworkExample:
             raise ValueError("Update the example observations for the current network.")
         decisions = player.think(observation)[0].astype(bool).tolist()
         values = [value[0].copy() for value in player.neural_net.last_activations]
+        weights = [
+            layer[0].weight.detach().cpu().numpy().copy()
+            for layer in player.neural_net.layers
+        ]
+        biases = [
+            layer[0].bias.detach().cpu().numpy().copy()
+            for layer in player.neural_net.layers
+        ]
+        preactivations = []
+        activation_input = torch.as_tensor(observation, dtype=torch.float32)
+        for layer in player.neural_net.layers:
+            linear = layer[0]
+            preactivation = torch.nn.functional.linear(
+                activation_input, linear.weight, linear.bias
+            )
+            preactivations.append(preactivation.detach().cpu().numpy().copy())
+            activation_input = layer[1](preactivation)
+
+        focused_neuron = min(3, sizes[1] - 1)
+        focused_contributions = (
+            torch.as_tensor(observation, dtype=torch.float32)
+            * player.neural_net.layers[0][0].weight[focused_neuron]
+        ).detach().cpu().numpy().copy()
+        focused_bias = float(biases[0][focused_neuron])
+        focused_preactivation = float(preactivations[0][focused_neuron])
+        focused_activation = float(values[1][focused_neuron])
+        dominant_sources = [
+            [
+                int(np.argmax(np.abs(values[layer_index] * weights[layer_index][target_index])))
+                for target_index in range(sizes[layer_index + 1])
+            ]
+            for layer_index in range(len(weights))
+        ]
     return NetworkExample(
-        sizes, activations, OBSERVATION_LABELS, ACTION_LABELS, values, decisions
+        sizes=sizes,
+        activations=activations,
+        inputs=OBSERVATION_LABELS,
+        actions=ACTION_LABELS,
+        observation=observation.copy(),
+        values=values,
+        preactivations=preactivations,
+        weights=weights,
+        biases=biases,
+        focused_neuron=focused_neuron,
+        focused_contributions=focused_contributions,
+        focused_bias=focused_bias,
+        focused_preactivation=focused_preactivation,
+        focused_activation=focused_activation,
+        dominant_sources=dominant_sources,
+        decisions=decisions,
     )
 
 
