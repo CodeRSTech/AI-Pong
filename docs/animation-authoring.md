@@ -7,7 +7,7 @@ colors, pacing, or other presentation details.
 
 ## Find the part you want to change
 
-Both videos are scenes in [`scripts/animate_diagrams.py`](../scripts/animate_diagrams.py):
+Both videos are scenes in [`scripts/animate_diagrams.py`](https://github.com/CodeRSTech/AI-Pong/blob/main/scripts/animate_diagrams.py):
 
 | Video | Scene class | What it explains |
 | --- | --- | --- |
@@ -24,11 +24,11 @@ For most visual edits, start in the matching scene's `construct` method:
 - Change an animation's speed by adjusting its `run_time`; change a pause
   between beats with `self.wait(...)`.
 - Shared colors, backgrounds, and reusable visual components live in
-  [`scripts/animation_theme.py`](../scripts/animation_theme.py). A change there
+  [`scripts/animation_theme.py`](https://github.com/CodeRSTech/AI-Pong/blob/main/scripts/animation_theme.py). A change there
   may affect both videos, so preview both before keeping it.
 
 The numerical examples are assembled in
-[`scripts/animation_data.py`](../scripts/animation_data.py) from the current
+[`scripts/animation_data.py`](https://github.com/CodeRSTech/AI-Pong/blob/main/scripts/animation_data.py) from the current
 PyTorch model and crossover functions. Prefer changing the explanatory copy or
 layout rather than typing replacement values into the scene: the displayed
 values and diagrams are intended to stay connected to the source behavior.
@@ -67,7 +67,7 @@ neither is installed, install one of those fonts and render again.
 
 ## Preview without replacing the published videos
 
-The renderer is [`scripts/render_animations.py`](../scripts/render_animations.py).
+The renderer is [`scripts/render_animations.py`](https://github.com/CodeRSTech/AI-Pong/blob/main/scripts/render_animations.py).
 It accepts the scene names `neural-network` and `two-point-crossover`, and
 writes MP4s to the directory given by `--output-dir`. Always use a separate
 preview directory while iterating:
