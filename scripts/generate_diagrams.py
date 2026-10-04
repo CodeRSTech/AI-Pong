@@ -15,18 +15,18 @@ from src.utils.functions import crossover_neuron_masks, crossover_parameter_mask
 
 
 COLORS = {
-    "background": "#0b1120",
-    "panel": "#172033",
-    "panel_border": "#475569",
-    "text": "#e2e8f0",
-    "muted": "#cbd5e1",
-    "subtle": "#94a3b8",
-    "neutral": "#334155",
-    "parent_a": "#60a5fa",
-    "parent_a_fill": "#1e3a8a",
-    "parent_b": "#fb7185",
-    "parent_b_fill": "#881337",
-    "cut": "#fbbf24",
+    "background": "#09090b",
+    "panel": "#121212",
+    "panel_border": "#37373a",
+    "text": "#f4f4f5",
+    "muted": "#a1a1aa",
+    "subtle": "#71717a",
+    "neutral": "#27272a",
+    "parent_a": "#00ffff",
+    "parent_a_fill": "#123b3b",
+    "parent_b": "#00ff66",
+    "parent_b_fill": "#12351f",
+    "cut": "#ff00ff",
 }
 
 
@@ -69,7 +69,7 @@ def _svg_document(title: str, description: str, width: int, height: int, body: s
       <path d="M0 0 8 4 0 8z" fill="{COLORS['subtle']}"/>
     </marker>
     <style>
-      text {{ font-family: "Segoe UI", Arial, sans-serif; fill: {COLORS['text']}; }}
+      text {{ font-family: Consolas, "Fira Code", monospace; fill: {COLORS['text']}; }}
       .title {{ font-size: 28px; font-weight: 700; }}
       .subtitle {{ font-size: 14px; fill: {COLORS['muted']}; }}
       .heading {{ font-size: 17px; font-weight: 700; }}
