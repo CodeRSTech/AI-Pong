@@ -30,6 +30,12 @@ biases between parents, producing reciprocal children; the
 explains the details and shows the crossover schematic. The
 [fitness guide](docs/fitness.md) describes how candidate players are scored.
 
+![Diagram of the current neural network, generated from the model definition.](docs/images/neural-network.svg)
+
+The [architecture guide](docs/architecture.md) includes a source-driven
+crossover diagram. Regenerate both diagrams from the repository root with
+`python -m scripts.generate_diagrams`.
+
 <!-- Image placeholders: replace these notes with captured assets when available. -->
 > **Gameplay screenshot placeholder:** Add a capture of the rendered court during training.
 >
