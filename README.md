@@ -36,6 +36,14 @@ The [architecture guide](docs/architecture.md) includes a source-driven
 crossover diagram. Regenerate both diagrams from the repository root with
 `python -m scripts.generate_diagrams`.
 
+**Animated explanations:** watch the
+[network forward pass](https://coderstech.github.io/AI-Pong/architecture/#neural-network-animation)
+and [two-point crossover](https://coderstech.github.io/AI-Pong/architecture/#crossover-animation)
+in the architecture guide. These are illustrative, source-driven examples,
+not footage of a trained elite. See the
+[rendering instructions](docs/architecture.md#regenerating-the-animations)
+to regenerate the clips with optional Manim tooling.
+
 <!-- Image placeholders: replace these notes with captured assets when available. -->
 > **Gameplay screenshot placeholder:** Add a capture of the rendered court during training.
 >
