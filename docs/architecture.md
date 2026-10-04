@@ -44,6 +44,25 @@ through the flattened weight tensors.
 
 ![Two-point crossover inheritance. Node colors show the parent supplying each neuron's bias; edge colors show the parent supplying each weight. The strip shows the exact concatenated output-neuron interval.](images/two-point-crossover.svg)
 
+### Crossover animation
+
+<video controls playsinline preload="none" width="100%" poster="../images/two-point-crossover.svg" aria-label="Two-point crossover parameter inheritance animation">
+  <source src="../images/animations/two-point-crossover.mp4" type="video/mp4">
+  Your browser does not support embedded video. Use the download link below.
+</video>
+
+[Watch or download the crossover animation](images/animations/two-point-crossover.mp4).
+The static diagram above remains available without video playback.
+
+The clip highlights the half-open interval `[3, 12)` in the ordered list of
+layer-output neurons, exchanges that interval, and then colors the children's
+biases and weights by their source parent (blue for A, pink for B). Input
+observations are not inherited parameters. For illustration, both children
+use the same cut points; the GA samples cut points independently for each
+actual crossover call. The parameter colors are checked against children
+produced by the real crossover function. Mutation occurs afterward and is
+not shown.
+
 The offspring are reset and mutated. Each network parameter independently
 has a 0.1 probability of receiving Gaussian noise scaled by 0.2. Offspring
 replace the tail of the selected pool, and the GA restores the configured
@@ -60,6 +79,23 @@ hidden layers use `tanh` and ReLU; the output layer uses sigmoid. Outputs
 above 0.5 activate the corresponding **Left** or **Right** action.
 
 ![The current network topology, input labels, layer sizes, and activations.](images/neural-network.svg)
+
+### Neural-network animation
+
+<video controls playsinline preload="none" width="100%" poster="../images/neural-network.svg" aria-label="Neural-network observations, forward pass, and paddle action animation">
+  <source src="../images/animations/neural-network.mp4" type="video/mp4">
+  Your browser does not support embedded video. Use the download link below.
+</video>
+
+[Watch or download the network animation](images/animations/neural-network.mp4).
+The static diagram above remains available without video playback.
+
+The clip builds the network, displays seven illustrative normalized inputs,
+and propagates them through the actual PyTorch model. It displays the computed
+activations and applies the sigmoid output threshold to obtain a paddle
+action. This is a freshly initialized network with seed `334`, **not a trained
+elite or a gameplay performance demonstration**. Both active outputs, or
+neither active output, result in no movement.
 
 The model is implemented with PyTorch `nn.Linear` layers. For population
 inference, `BatchedPopulationBrain` stacks the individuals' weights and
@@ -116,3 +152,25 @@ python -m scripts.generate_diagrams
 The script rewrites `docs/images/neural-network.svg` and
 `docs/images/two-point-crossover.svg`. Keep the generated files checked in so
 the documentation renders without running the generator during site builds.
+
+### Regenerating the animations
+
+Manim is optional authoring tooling: training, SVG generation, tests of the
+animation data, and documentation builds do not require it. Install it in
+the environment used for rendering:
+
+```console
+python -m pip install manim
+python -m scripts.render_animations
+```
+
+On Windows, if Manim is installed in the project's virtual environment, use
+`.\.venv\Scripts\python.exe -m scripts.render_animations`.
+The renderer uses ordinary text rather than TeX, so these scenes do not
+require LaTeX.
+
+The command writes `neural-network.mp4` and `two-point-crossover.mp4` beneath
+`docs/images/animations/`, using a temporary directory for intermediate
+render files. Its default is 480p at 15 fps; use `--quality m` for 720p at
+30 fps or `--quality h` for 1080p at 60 fps. Commit the finished clips so
+GitHub Pages can serve them without installing Manim or rendering scenes.
