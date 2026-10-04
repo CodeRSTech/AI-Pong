@@ -32,7 +32,9 @@ jobs:
           python -m pip install mkdocs mkdocs-bootswatch
 
       - name: Build documentation
-        run: mkdocs build --strict
+        run: |
+          export SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)"
+          mkdocs build --strict
 
       - name: Check publishing credentials
         env:
