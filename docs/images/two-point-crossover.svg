@@ -1,74 +1,403 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="620" viewBox="0 0 1000 620" role="img" aria-labelledby="title desc">
-  <title id="title">Two-point crossover in AI-Pong</title>
-  <desc id="desc">Two cut points delimit a contiguous interval in the ordered layer outputs. Reciprocal offspring inherit that interval from opposite parents and the rest of their network from the other parent.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1010" viewBox="0 0 1500 1010" role="img" aria-labelledby="title desc">
+  <title id="title">AI-Pong two-point crossover</title>
+  <desc id="desc">The exact half-open neuron interval used to make reciprocal children, with neuron bias and connection weight provenance shown from the shared GA masks.</desc>
   <defs>
-    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
-      <path d="M0 0 9 4.5 0 9z" fill="#94a3b8"/>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto">
+      <path d="M0 0 8 4 0 8z" fill="#94a3b8"/>
     </marker>
     <style>
       text { font-family: "Segoe UI", Arial, sans-serif; fill: #e2e8f0; }
-      .title { font-size: 25px; font-weight: 700; }
+      .title { font-size: 28px; font-weight: 700; }
       .subtitle { font-size: 14px; fill: #cbd5e1; }
-      .label { font-size: 16px; font-weight: 700; }
-      .small { font-size: 13px; fill: #e2e8f0; }
-      .tiny { font-size: 11px; fill: #cbd5e1; }
-      .panel { fill: #1e293b; stroke: #475569; stroke-width: 1.5; }
-      .layer { fill: #0f172a; stroke: #64748b; stroke-width: 1.5; }
-      .conn { stroke: #94a3b8; stroke-width: 2; fill: none; marker-end: url(#arrow); }
-      .parentA { fill: #1e3a8a; stroke: #60a5fa; stroke-width: 1.5; }
-      .parentB { fill: #881337; stroke: #fb7185; stroke-width: 1.5; }
-      .slice { fill: #f59e0b; fill-opacity: .58; stroke: #fbbf24; stroke-width: 1.5; }
-      .cut { stroke: #fb7185; stroke-width: 2.5; stroke-dasharray: 8 6; }
+      .heading { font-size: 17px; font-weight: 700; }
+      .body { font-size: 13px; fill: #cbd5e1; }
+      .caption { font-size: 11px; fill: #94a3b8; }
+      .node { stroke-width: 2; }
+      .edge { fill: none; stroke-width: 1.15; opacity: .62; }
     </style>
   </defs>
-
-  <rect width="1000" height="620" rx="18" fill="#0b1120"/>
-  <text x="38" y="47" class="title">Two-point crossover: exchange a middle slice</text>
-  <text x="38" y="73" class="subtitle">The network view is illustrative; the selected interval follows layer-output order in the implementation.</text>
-
-  <rect x="32" y="96" width="936" height="322" rx="14" class="panel"/>
-  <text x="54" y="129" class="label">Parent A</text>
-  <text x="54" y="294" class="label">Parent B</text>
-
-  <g aria-label="Parent A network">
-    <path d="M209 198 H262 M378 198 H431 M547 198 H600" class="conn"/>
-    <rect x="112" y="169" width="97" height="58" rx="9" class="layer parentA"/>
-    <rect x="262" y="162" width="116" height="72" rx="9" class="layer parentA"/>
-    <rect x="431" y="162" width="116" height="72" rx="9" class="layer parentA"/>
-    <rect x="600" y="169" width="97" height="58" rx="9" class="layer parentA"/>
-    <text x="160" y="193" text-anchor="middle" class="label">7</text><text x="160" y="213" text-anchor="middle" class="tiny">inputs</text>
-    <text x="320" y="193" text-anchor="middle" class="label">8</text><text x="320" y="213" text-anchor="middle" class="tiny">hidden 1</text>
-    <text x="489" y="193" text-anchor="middle" class="label">6</text><text x="489" y="213" text-anchor="middle" class="tiny">hidden 2</text>
-    <text x="648" y="193" text-anchor="middle" class="label">2</text><text x="648" y="213" text-anchor="middle" class="tiny">actions</text>
-  </g>
-
-  <g aria-label="Parent B network with the example interval highlighted">
-    <path d="M209 357 H262 M378 357 H431 M547 357 H600" class="conn"/>
-    <rect x="112" y="328" width="97" height="58" rx="9" class="layer parentB"/>
-    <rect x="262" y="321" width="116" height="72" rx="9" class="layer parentB"/>
-    <rect x="431" y="321" width="116" height="72" rx="9" class="layer parentB"/>
-    <rect x="600" y="328" width="97" height="58" rx="9" class="layer parentB"/>
-    <text x="160" y="352" text-anchor="middle" class="label">7</text><text x="160" y="372" text-anchor="middle" class="tiny">inputs</text>
-    <text x="320" y="352" text-anchor="middle" class="label">8</text><text x="320" y="372" text-anchor="middle" class="tiny">hidden 1</text>
-    <text x="489" y="352" text-anchor="middle" class="label">6</text><text x="489" y="372" text-anchor="middle" class="tiny">hidden 2</text>
-    <text x="648" y="352" text-anchor="middle" class="label">2</text><text x="648" y="372" text-anchor="middle" class="tiny">actions</text>
-    <path d="M379 321 L447 321 L467 393 L399 393 Z" class="slice"/>
-  </g>
-
-  <line x1="329" y1="146" x2="403" y2="407" class="cut"/>
-  <line x1="397" y1="146" x2="471" y2="407" class="cut"/>
-  <text x="305" y="151" class="tiny" fill="#be123c">cut 1</text>
-  <text x="409" y="151" class="tiny" fill="#be123c">cut 2</text>
-  <text x="731" y="180" class="small">Two cut points enclose</text>
-  <text x="731" y="200" class="small">one contiguous interval.</text>
-  <text x="731" y="340" class="small">The highlighted interval</text>
-  <text x="731" y="360" class="small">comes from Parent B for</text>
-  <text x="731" y="380" class="small">Child A (example).</text>
-
-  <rect x="32" y="439" width="936" height="151" rx="14" fill="#172033" stroke="#475569" stroke-width="1.5"/>
-  <text x="54" y="473" class="label">Reciprocal offspring</text>
-  <text x="54" y="505" class="small">Child A = Parent A outside the interval + Parent B inside it</text>
-  <text x="54" y="532" class="small">Child B = Parent B outside the interval + Parent A inside it</text>
-  <text x="54" y="566" class="tiny">Selected neurons carry their incoming weights and biases; outgoing connections from selected neurons in the preceding layer follow that parent too.</text>
-  <text x="54" y="583" class="tiny">The code selects neurons in concatenated layer-output order, not by cutting the drawing geometrically. Mutation follows crossover.</text>
+  <rect width="100%" height="100%" rx="18" fill="#0b1120"/>
+<text x="38" y="48" class="title">Two-point crossover inheritance</text>
+<text x="38" y="76" class="subtitle">Neuron selection and parameter ownership use the same interval masks as the genetic algorithm.</text>
+<rect x="35" y="100" width="1430" height="410" rx="14" fill="#172033" stroke="#475569"/>
+<rect x="35" y="525" width="1430" height="410" rx="14" fill="#172033" stroke="#475569"/>
+<text x="55" y="137" class="heading">Child A</text>
+<text x="55" y="158" class="caption">selected interval</text>
+<text x="382.0" y="178" text-anchor="middle" class="caption">Hidden 1 neurons</text>
+<rect x="190" y="190" width="48" height="32" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.2"/>
+<text x="214.0" y="211" text-anchor="middle" class="caption">0</text>
+<rect x="238" y="190" width="48" height="32" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.2"/>
+<text x="262.0" y="211" text-anchor="middle" class="caption">1</text>
+<rect x="286" y="190" width="48" height="32" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.2"/>
+<text x="310.0" y="211" text-anchor="middle" class="caption">2</text>
+<rect x="334" y="190" width="48" height="32" fill="#881337" stroke="#fb7185" stroke-width="1.2"/>
+<text x="358.0" y="211" text-anchor="middle" class="caption">3</text>
+<rect x="382" y="190" width="48" height="32" fill="#881337" stroke="#fb7185" stroke-width="1.2"/>
+<text x="406.0" y="211" text-anchor="middle" class="caption">4</text>
+<rect x="430" y="190" width="48" height="32" fill="#881337" stroke="#fb7185" stroke-width="1.2"/>
+<text x="454.0" y="211" text-anchor="middle" class="caption">5</text>
+<rect x="478" y="190" width="48" height="32" fill="#881337" stroke="#fb7185" stroke-width="1.2"/>
+<text x="502.0" y="211" text-anchor="middle" class="caption">6</text>
+<rect x="526" y="190" width="48" height="32" fill="#881337" stroke="#fb7185" stroke-width="1.2"/>
+<text x="550.0" y="211" text-anchor="middle" class="caption">7</text>
+<text x="718.0" y="178" text-anchor="middle" class="caption">Hidden 2 neurons</text>
+<rect x="574" y="190" width="48" height="32" fill="#881337" stroke="#fb7185" stroke-width="1.2"/>
+<text x="598.0" y="211" text-anchor="middle" class="caption">8</text>
+<rect x="622" y="190" width="48" height="32" fill="#881337" stroke="#fb7185" stroke-width="1.2"/>
+<text x="646.0" y="211" text-anchor="middle" class="caption">9</text>
+<rect x="670" y="190" width="48" height="32" fill="#881337" stroke="#fb7185" stroke-width="1.2"/>
+<text x="694.0" y="211" text-anchor="middle" class="caption">10</text>
+<rect x="718" y="190" width="48" height="32" fill="#881337" stroke="#fb7185" stroke-width="1.2"/>
+<text x="742.0" y="211" text-anchor="middle" class="caption">11</text>
+<rect x="766" y="190" width="48" height="32" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.2"/>
+<text x="790.0" y="211" text-anchor="middle" class="caption">12</text>
+<rect x="814" y="190" width="48" height="32" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.2"/>
+<text x="838.0" y="211" text-anchor="middle" class="caption">13</text>
+<text x="910.0" y="178" text-anchor="middle" class="caption">Output neurons</text>
+<rect x="862" y="190" width="48" height="32" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.2"/>
+<text x="886.0" y="211" text-anchor="middle" class="caption">14</text>
+<rect x="910" y="190" width="48" height="32" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.2"/>
+<text x="934.0" y="211" text-anchor="middle" class="caption">15</text>
+<line x1="334" y1="185" x2="334" y2="229" stroke="#fbbf24" stroke-width="2.5" stroke-dasharray="5 4"/>
+<text x="334" y="243" text-anchor="middle" class="caption" fill="#fbbf24">cut 1</text>
+<line x1="766" y1="185" x2="766" y2="229" stroke="#fbbf24" stroke-width="2.5" stroke-dasharray="5 4"/>
+<text x="766" y="243" text-anchor="middle" class="caption" fill="#fbbf24">cut 2</text>
+<line x1="230" y1="299.1" x2="445" y2="284.5" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="299.1" x2="445" y2="313.8" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="299.1" x2="445" y2="343.1" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="299.1" x2="445" y2="372.4" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="299.1" x2="445" y2="401.6" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="299.1" x2="445" y2="430.9" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="299.1" x2="445" y2="460.2" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="299.1" x2="445" y2="489.5" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="328.4" x2="445" y2="284.5" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="328.4" x2="445" y2="313.8" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="328.4" x2="445" y2="343.1" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="328.4" x2="445" y2="372.4" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="328.4" x2="445" y2="401.6" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="328.4" x2="445" y2="430.9" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="328.4" x2="445" y2="460.2" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="328.4" x2="445" y2="489.5" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="357.7" x2="445" y2="284.5" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="357.7" x2="445" y2="313.8" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="357.7" x2="445" y2="343.1" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="357.7" x2="445" y2="372.4" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="357.7" x2="445" y2="401.6" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="357.7" x2="445" y2="430.9" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="357.7" x2="445" y2="460.2" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="357.7" x2="445" y2="489.5" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="387.0" x2="445" y2="284.5" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="387.0" x2="445" y2="313.8" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="387.0" x2="445" y2="343.1" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="387.0" x2="445" y2="372.4" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="387.0" x2="445" y2="401.6" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="387.0" x2="445" y2="430.9" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="387.0" x2="445" y2="460.2" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="387.0" x2="445" y2="489.5" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="416.3" x2="445" y2="284.5" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="416.3" x2="445" y2="313.8" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="416.3" x2="445" y2="343.1" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="416.3" x2="445" y2="372.4" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="416.3" x2="445" y2="401.6" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="416.3" x2="445" y2="430.9" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="416.3" x2="445" y2="460.2" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="416.3" x2="445" y2="489.5" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="445.6" x2="445" y2="284.5" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="445.6" x2="445" y2="313.8" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="445.6" x2="445" y2="343.1" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="445.6" x2="445" y2="372.4" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="445.6" x2="445" y2="401.6" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="445.6" x2="445" y2="430.9" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="445.6" x2="445" y2="460.2" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="445.6" x2="445" y2="489.5" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="474.9" x2="445" y2="284.5" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="474.9" x2="445" y2="313.8" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="474.9" x2="445" y2="343.1" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="474.9" x2="445" y2="372.4" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="474.9" x2="445" y2="401.6" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="474.9" x2="445" y2="430.9" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="474.9" x2="445" y2="460.2" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="474.9" x2="445" y2="489.5" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="284.5" x2="680" y2="313.8" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="284.5" x2="680" y2="343.1" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="284.5" x2="680" y2="372.4" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="284.5" x2="680" y2="401.6" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="284.5" x2="680" y2="430.9" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="284.5" x2="680" y2="460.2" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="313.8" x2="680" y2="313.8" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="313.8" x2="680" y2="343.1" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="313.8" x2="680" y2="372.4" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="313.8" x2="680" y2="401.6" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="313.8" x2="680" y2="430.9" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="313.8" x2="680" y2="460.2" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="343.1" x2="680" y2="313.8" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="343.1" x2="680" y2="343.1" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="343.1" x2="680" y2="372.4" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="343.1" x2="680" y2="401.6" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="343.1" x2="680" y2="430.9" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="343.1" x2="680" y2="460.2" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="372.4" x2="680" y2="313.8" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="372.4" x2="680" y2="343.1" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="372.4" x2="680" y2="372.4" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="372.4" x2="680" y2="401.6" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="372.4" x2="680" y2="430.9" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="372.4" x2="680" y2="460.2" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="401.6" x2="680" y2="313.8" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="401.6" x2="680" y2="343.1" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="401.6" x2="680" y2="372.4" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="401.6" x2="680" y2="401.6" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="401.6" x2="680" y2="430.9" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="401.6" x2="680" y2="460.2" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="430.9" x2="680" y2="313.8" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="430.9" x2="680" y2="343.1" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="430.9" x2="680" y2="372.4" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="430.9" x2="680" y2="401.6" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="430.9" x2="680" y2="430.9" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="430.9" x2="680" y2="460.2" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="460.2" x2="680" y2="313.8" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="460.2" x2="680" y2="343.1" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="460.2" x2="680" y2="372.4" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="460.2" x2="680" y2="401.6" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="460.2" x2="680" y2="430.9" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="460.2" x2="680" y2="460.2" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="489.5" x2="680" y2="313.8" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="489.5" x2="680" y2="343.1" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="489.5" x2="680" y2="372.4" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="489.5" x2="680" y2="401.6" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="489.5" x2="680" y2="430.9" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="489.5" x2="680" y2="460.2" class="edge" stroke="#fb7185"/>
+<line x1="700" y1="313.8" x2="915" y2="372.4" class="edge" stroke="#fb7185"/>
+<line x1="700" y1="313.8" x2="915" y2="401.6" class="edge" stroke="#fb7185"/>
+<line x1="700" y1="343.1" x2="915" y2="372.4" class="edge" stroke="#fb7185"/>
+<line x1="700" y1="343.1" x2="915" y2="401.6" class="edge" stroke="#fb7185"/>
+<line x1="700" y1="372.4" x2="915" y2="372.4" class="edge" stroke="#fb7185"/>
+<line x1="700" y1="372.4" x2="915" y2="401.6" class="edge" stroke="#fb7185"/>
+<line x1="700" y1="401.6" x2="915" y2="372.4" class="edge" stroke="#fb7185"/>
+<line x1="700" y1="401.6" x2="915" y2="401.6" class="edge" stroke="#fb7185"/>
+<line x1="700" y1="430.9" x2="915" y2="372.4" class="edge" stroke="#60a5fa"/>
+<line x1="700" y1="430.9" x2="915" y2="401.6" class="edge" stroke="#60a5fa"/>
+<line x1="700" y1="460.2" x2="915" y2="372.4" class="edge" stroke="#60a5fa"/>
+<line x1="700" y1="460.2" x2="915" y2="401.6" class="edge" stroke="#60a5fa"/>
+<text x="220" y="272" text-anchor="middle" class="caption">Inputs · 7</text>
+<circle cx="220" cy="299.1" r="10" fill="#334155" stroke="#94a3b8" class="node"/>
+<circle cx="220" cy="328.4" r="10" fill="#334155" stroke="#94a3b8" class="node"/>
+<circle cx="220" cy="357.7" r="10" fill="#334155" stroke="#94a3b8" class="node"/>
+<circle cx="220" cy="387.0" r="10" fill="#334155" stroke="#94a3b8" class="node"/>
+<circle cx="220" cy="416.3" r="10" fill="#334155" stroke="#94a3b8" class="node"/>
+<circle cx="220" cy="445.6" r="10" fill="#334155" stroke="#94a3b8" class="node"/>
+<circle cx="220" cy="474.9" r="10" fill="#334155" stroke="#94a3b8" class="node"/>
+<text x="455" y="272" text-anchor="middle" class="caption">Hidden 1 · 8</text>
+<circle cx="455" cy="284.5" r="10" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="455" cy="313.8" r="10" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="455" cy="343.1" r="10" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="455" cy="372.4" r="10" fill="#881337" stroke="#fb7185" class="node"/>
+<circle cx="455" cy="401.6" r="10" fill="#881337" stroke="#fb7185" class="node"/>
+<circle cx="455" cy="430.9" r="10" fill="#881337" stroke="#fb7185" class="node"/>
+<circle cx="455" cy="460.2" r="10" fill="#881337" stroke="#fb7185" class="node"/>
+<circle cx="455" cy="489.5" r="10" fill="#881337" stroke="#fb7185" class="node"/>
+<text x="690" y="272" text-anchor="middle" class="caption">Hidden 2 · 6</text>
+<circle cx="690" cy="313.8" r="10" fill="#881337" stroke="#fb7185" class="node"/>
+<circle cx="690" cy="343.1" r="10" fill="#881337" stroke="#fb7185" class="node"/>
+<circle cx="690" cy="372.4" r="10" fill="#881337" stroke="#fb7185" class="node"/>
+<circle cx="690" cy="401.6" r="10" fill="#881337" stroke="#fb7185" class="node"/>
+<circle cx="690" cy="430.9" r="10" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="690" cy="460.2" r="10" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<text x="925" y="272" text-anchor="middle" class="caption">Output actions · 2</text>
+<circle cx="925" cy="372.4" r="10" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="925" cy="401.6" r="10" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<text x="55" y="562" class="heading">Child B</text>
+<text x="55" y="583" class="caption">reciprocal interval</text>
+<text x="382.0" y="603" text-anchor="middle" class="caption">Hidden 1 neurons</text>
+<rect x="190" y="615" width="48" height="32" fill="#881337" stroke="#fb7185" stroke-width="1.2"/>
+<text x="214.0" y="636" text-anchor="middle" class="caption">0</text>
+<rect x="238" y="615" width="48" height="32" fill="#881337" stroke="#fb7185" stroke-width="1.2"/>
+<text x="262.0" y="636" text-anchor="middle" class="caption">1</text>
+<rect x="286" y="615" width="48" height="32" fill="#881337" stroke="#fb7185" stroke-width="1.2"/>
+<text x="310.0" y="636" text-anchor="middle" class="caption">2</text>
+<rect x="334" y="615" width="48" height="32" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.2"/>
+<text x="358.0" y="636" text-anchor="middle" class="caption">3</text>
+<rect x="382" y="615" width="48" height="32" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.2"/>
+<text x="406.0" y="636" text-anchor="middle" class="caption">4</text>
+<rect x="430" y="615" width="48" height="32" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.2"/>
+<text x="454.0" y="636" text-anchor="middle" class="caption">5</text>
+<rect x="478" y="615" width="48" height="32" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.2"/>
+<text x="502.0" y="636" text-anchor="middle" class="caption">6</text>
+<rect x="526" y="615" width="48" height="32" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.2"/>
+<text x="550.0" y="636" text-anchor="middle" class="caption">7</text>
+<text x="718.0" y="603" text-anchor="middle" class="caption">Hidden 2 neurons</text>
+<rect x="574" y="615" width="48" height="32" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.2"/>
+<text x="598.0" y="636" text-anchor="middle" class="caption">8</text>
+<rect x="622" y="615" width="48" height="32" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.2"/>
+<text x="646.0" y="636" text-anchor="middle" class="caption">9</text>
+<rect x="670" y="615" width="48" height="32" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.2"/>
+<text x="694.0" y="636" text-anchor="middle" class="caption">10</text>
+<rect x="718" y="615" width="48" height="32" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.2"/>
+<text x="742.0" y="636" text-anchor="middle" class="caption">11</text>
+<rect x="766" y="615" width="48" height="32" fill="#881337" stroke="#fb7185" stroke-width="1.2"/>
+<text x="790.0" y="636" text-anchor="middle" class="caption">12</text>
+<rect x="814" y="615" width="48" height="32" fill="#881337" stroke="#fb7185" stroke-width="1.2"/>
+<text x="838.0" y="636" text-anchor="middle" class="caption">13</text>
+<text x="910.0" y="603" text-anchor="middle" class="caption">Output neurons</text>
+<rect x="862" y="615" width="48" height="32" fill="#881337" stroke="#fb7185" stroke-width="1.2"/>
+<text x="886.0" y="636" text-anchor="middle" class="caption">14</text>
+<rect x="910" y="615" width="48" height="32" fill="#881337" stroke="#fb7185" stroke-width="1.2"/>
+<text x="934.0" y="636" text-anchor="middle" class="caption">15</text>
+<line x1="334" y1="610" x2="334" y2="654" stroke="#fbbf24" stroke-width="2.5" stroke-dasharray="5 4"/>
+<text x="334" y="668" text-anchor="middle" class="caption" fill="#fbbf24">cut 1</text>
+<line x1="766" y1="610" x2="766" y2="654" stroke="#fbbf24" stroke-width="2.5" stroke-dasharray="5 4"/>
+<text x="766" y="668" text-anchor="middle" class="caption" fill="#fbbf24">cut 2</text>
+<line x1="230" y1="724.1" x2="445" y2="709.5" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="724.1" x2="445" y2="738.8" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="724.1" x2="445" y2="768.1" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="724.1" x2="445" y2="797.4" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="724.1" x2="445" y2="826.6" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="724.1" x2="445" y2="855.9" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="724.1" x2="445" y2="885.2" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="724.1" x2="445" y2="914.5" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="753.4" x2="445" y2="709.5" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="753.4" x2="445" y2="738.8" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="753.4" x2="445" y2="768.1" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="753.4" x2="445" y2="797.4" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="753.4" x2="445" y2="826.6" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="753.4" x2="445" y2="855.9" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="753.4" x2="445" y2="885.2" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="753.4" x2="445" y2="914.5" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="782.7" x2="445" y2="709.5" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="782.7" x2="445" y2="738.8" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="782.7" x2="445" y2="768.1" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="782.7" x2="445" y2="797.4" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="782.7" x2="445" y2="826.6" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="782.7" x2="445" y2="855.9" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="782.7" x2="445" y2="885.2" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="782.7" x2="445" y2="914.5" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="812.0" x2="445" y2="709.5" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="812.0" x2="445" y2="738.8" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="812.0" x2="445" y2="768.1" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="812.0" x2="445" y2="797.4" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="812.0" x2="445" y2="826.6" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="812.0" x2="445" y2="855.9" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="812.0" x2="445" y2="885.2" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="812.0" x2="445" y2="914.5" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="841.3" x2="445" y2="709.5" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="841.3" x2="445" y2="738.8" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="841.3" x2="445" y2="768.1" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="841.3" x2="445" y2="797.4" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="841.3" x2="445" y2="826.6" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="841.3" x2="445" y2="855.9" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="841.3" x2="445" y2="885.2" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="841.3" x2="445" y2="914.5" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="870.6" x2="445" y2="709.5" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="870.6" x2="445" y2="738.8" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="870.6" x2="445" y2="768.1" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="870.6" x2="445" y2="797.4" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="870.6" x2="445" y2="826.6" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="870.6" x2="445" y2="855.9" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="870.6" x2="445" y2="885.2" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="870.6" x2="445" y2="914.5" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="899.9" x2="445" y2="709.5" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="899.9" x2="445" y2="738.8" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="899.9" x2="445" y2="768.1" class="edge" stroke="#fb7185"/>
+<line x1="230" y1="899.9" x2="445" y2="797.4" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="899.9" x2="445" y2="826.6" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="899.9" x2="445" y2="855.9" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="899.9" x2="445" y2="885.2" class="edge" stroke="#60a5fa"/>
+<line x1="230" y1="899.9" x2="445" y2="914.5" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="709.5" x2="680" y2="738.8" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="709.5" x2="680" y2="768.1" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="709.5" x2="680" y2="797.4" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="709.5" x2="680" y2="826.6" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="709.5" x2="680" y2="855.9" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="709.5" x2="680" y2="885.2" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="738.8" x2="680" y2="738.8" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="738.8" x2="680" y2="768.1" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="738.8" x2="680" y2="797.4" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="738.8" x2="680" y2="826.6" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="738.8" x2="680" y2="855.9" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="738.8" x2="680" y2="885.2" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="768.1" x2="680" y2="738.8" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="768.1" x2="680" y2="768.1" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="768.1" x2="680" y2="797.4" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="768.1" x2="680" y2="826.6" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="768.1" x2="680" y2="855.9" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="768.1" x2="680" y2="885.2" class="edge" stroke="#fb7185"/>
+<line x1="465" y1="797.4" x2="680" y2="738.8" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="797.4" x2="680" y2="768.1" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="797.4" x2="680" y2="797.4" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="797.4" x2="680" y2="826.6" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="797.4" x2="680" y2="855.9" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="797.4" x2="680" y2="885.2" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="826.6" x2="680" y2="738.8" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="826.6" x2="680" y2="768.1" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="826.6" x2="680" y2="797.4" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="826.6" x2="680" y2="826.6" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="826.6" x2="680" y2="855.9" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="826.6" x2="680" y2="885.2" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="855.9" x2="680" y2="738.8" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="855.9" x2="680" y2="768.1" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="855.9" x2="680" y2="797.4" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="855.9" x2="680" y2="826.6" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="855.9" x2="680" y2="855.9" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="855.9" x2="680" y2="885.2" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="885.2" x2="680" y2="738.8" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="885.2" x2="680" y2="768.1" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="885.2" x2="680" y2="797.4" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="885.2" x2="680" y2="826.6" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="885.2" x2="680" y2="855.9" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="885.2" x2="680" y2="885.2" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="914.5" x2="680" y2="738.8" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="914.5" x2="680" y2="768.1" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="914.5" x2="680" y2="797.4" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="914.5" x2="680" y2="826.6" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="914.5" x2="680" y2="855.9" class="edge" stroke="#60a5fa"/>
+<line x1="465" y1="914.5" x2="680" y2="885.2" class="edge" stroke="#60a5fa"/>
+<line x1="700" y1="738.8" x2="915" y2="797.4" class="edge" stroke="#60a5fa"/>
+<line x1="700" y1="738.8" x2="915" y2="826.6" class="edge" stroke="#60a5fa"/>
+<line x1="700" y1="768.1" x2="915" y2="797.4" class="edge" stroke="#60a5fa"/>
+<line x1="700" y1="768.1" x2="915" y2="826.6" class="edge" stroke="#60a5fa"/>
+<line x1="700" y1="797.4" x2="915" y2="797.4" class="edge" stroke="#60a5fa"/>
+<line x1="700" y1="797.4" x2="915" y2="826.6" class="edge" stroke="#60a5fa"/>
+<line x1="700" y1="826.6" x2="915" y2="797.4" class="edge" stroke="#60a5fa"/>
+<line x1="700" y1="826.6" x2="915" y2="826.6" class="edge" stroke="#60a5fa"/>
+<line x1="700" y1="855.9" x2="915" y2="797.4" class="edge" stroke="#fb7185"/>
+<line x1="700" y1="855.9" x2="915" y2="826.6" class="edge" stroke="#fb7185"/>
+<line x1="700" y1="885.2" x2="915" y2="797.4" class="edge" stroke="#fb7185"/>
+<line x1="700" y1="885.2" x2="915" y2="826.6" class="edge" stroke="#fb7185"/>
+<text x="220" y="697" text-anchor="middle" class="caption">Inputs · 7</text>
+<circle cx="220" cy="724.1" r="10" fill="#334155" stroke="#94a3b8" class="node"/>
+<circle cx="220" cy="753.4" r="10" fill="#334155" stroke="#94a3b8" class="node"/>
+<circle cx="220" cy="782.7" r="10" fill="#334155" stroke="#94a3b8" class="node"/>
+<circle cx="220" cy="812.0" r="10" fill="#334155" stroke="#94a3b8" class="node"/>
+<circle cx="220" cy="841.3" r="10" fill="#334155" stroke="#94a3b8" class="node"/>
+<circle cx="220" cy="870.6" r="10" fill="#334155" stroke="#94a3b8" class="node"/>
+<circle cx="220" cy="899.9" r="10" fill="#334155" stroke="#94a3b8" class="node"/>
+<text x="455" y="697" text-anchor="middle" class="caption">Hidden 1 · 8</text>
+<circle cx="455" cy="709.5" r="10" fill="#881337" stroke="#fb7185" class="node"/>
+<circle cx="455" cy="738.8" r="10" fill="#881337" stroke="#fb7185" class="node"/>
+<circle cx="455" cy="768.1" r="10" fill="#881337" stroke="#fb7185" class="node"/>
+<circle cx="455" cy="797.4" r="10" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="455" cy="826.6" r="10" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="455" cy="855.9" r="10" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="455" cy="885.2" r="10" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="455" cy="914.5" r="10" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<text x="690" y="697" text-anchor="middle" class="caption">Hidden 2 · 6</text>
+<circle cx="690" cy="738.8" r="10" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="690" cy="768.1" r="10" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="690" cy="797.4" r="10" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="690" cy="826.6" r="10" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="690" cy="855.9" r="10" fill="#881337" stroke="#fb7185" class="node"/>
+<circle cx="690" cy="885.2" r="10" fill="#881337" stroke="#fb7185" class="node"/>
+<text x="925" y="697" text-anchor="middle" class="caption">Output actions · 2</text>
+<circle cx="925" cy="797.4" r="10" fill="#881337" stroke="#fb7185" class="node"/>
+<circle cx="925" cy="826.6" r="10" fill="#881337" stroke="#fb7185" class="node"/>
+<circle cx="1212" cy="276" r="9" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<text x="1230" y="281" class="caption">Parent A parameters</text>
+<circle cx="1212" cy="310" r="9" fill="#881337" stroke="#fb7185" class="node"/>
+<text x="1230" y="315" class="caption">Parent B parameters</text>
+<circle cx="1212" cy="344" r="9" fill="#334155" stroke="#334155" class="node"/>
+<text x="1230" y="349" class="caption">Input observations</text>
+<text x="1212" y="386" class="caption">Node outline/fill: neuron bias source</text>
+<text x="1212" y="405" class="caption">Edge color: weight source</text>
+<text x="1212" y="424" class="caption">Cut points: [3, 12)</text>
+<text x="38" y="974" class="caption">Selected neurons inherit incoming weights and biases; connections from selected neurons in the previous layer inherit from that same parent.</text>
+<text x="38" y="993" class="caption">The strip shows the exact concatenated layer-output index order. Mutation is applied to offspring after crossover.</text>
 </svg>
