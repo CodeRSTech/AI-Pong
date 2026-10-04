@@ -7,7 +7,7 @@ import pytest
 from src.ga import GeneticAlgorithm
 from src.ga.network import BatchedPopulationBrain
 from src.ga.player import IndividualPlayer
-from src.utils.functions import two_point_crossover
+from src.utils.functions import crossover_neuron_masks, two_point_crossover
 
 
 def test_crossover_keeps_architecture():
@@ -36,6 +36,69 @@ def test_crossover_inherits_nonempty_neuron_range_and_outgoing_weights():
 
     for layer_index, source_mask in enumerate(selected_masks[:-1]):
         assert torch.all(child.layers[layer_index + 1][0].weight[:, source_mask] == 2)
+
+
+def test_crossover_neuron_masks_follow_layer_output_order():
+    player = IndividualPlayer()
+
+    masks = crossover_neuron_masks(player.neural_net, (3, 12))
+
+    assert masks == [
+        [False, False, False, True, True, True, True, True],
+        [True, True, True, True, False, False],
+        [False, False],
+    ]
+
+
+@pytest.mark.parametrize("cut_points", [(0, 0), (12, 3), (-1, 3), (3, 17), (True, 3)])
+def test_crossover_neuron_masks_reject_invalid_boundaries(cut_points):
+    with pytest.raises(ValueError, match="cut_points"):
+        crossover_neuron_masks(IndividualPlayer().neural_net, cut_points)
+
+
+def test_crossover_fixed_interval_uses_shared_masks_for_reciprocal_children():
+    parent_1, parent_2 = IndividualPlayer(), IndividualPlayer()
+    with torch.no_grad():
+        for layer in parent_1.neural_net.layers:
+            layer[0].weight.fill_(1)
+            layer[0].bias.fill_(1)
+        for layer in parent_2.neural_net.layers:
+            layer[0].weight.fill_(2)
+            layer[0].bias.fill_(2)
+
+    masks = crossover_neuron_masks(parent_1.neural_net, (3, 12))
+    child_a = two_point_crossover(
+        parent_1, parent_2, cut_points=(3, 12)
+    ).neural_net
+    child_b = two_point_crossover(
+        parent_2, parent_1, cut_points=(3, 12)
+    ).neural_net
+
+    for child, selected_value, other_value in (
+        (child_a, 2.0, 1.0),
+        (child_b, 1.0, 2.0),
+    ):
+        previous_mask = None
+        for layer, mask in zip(child.layers, masks):
+            rows_from_selected_parent = torch.tensor(mask)
+            expected_bias = torch.where(
+                rows_from_selected_parent, selected_value, other_value
+            )
+            assert torch.equal(layer[0].bias.cpu(), expected_bias)
+
+            rows_from_selected_parent = rows_from_selected_parent[:, None].expand_as(
+                layer[0].weight
+            ).clone()
+            if previous_mask is not None:
+                columns_from_selected_parent = torch.tensor(previous_mask)[None, :].expand_as(
+                    layer[0].weight
+                )
+                rows_from_selected_parent |= columns_from_selected_parent
+            expected_weight = torch.where(
+                rows_from_selected_parent, selected_value, other_value
+            )
+            assert torch.equal(layer[0].weight.cpu(), expected_weight)
+            previous_mask = mask
 
 
 def test_crossover_rejects_incompatible_networks():
