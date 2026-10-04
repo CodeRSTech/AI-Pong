@@ -6,7 +6,7 @@
 
 AI-Pong uses a genetic algorithm to evolve neural networks that play Pong. Each generation evaluates a population in parallel with batched PyTorch inference; Arcade displays the current population's representative game and network.
 
-**Documentation:** [Read the AI-Pong docs](https://coderstech.github.io/AI-Pong/) | [Release 1.4.0 details](docs/releases/1.4.0.md)
+**Documentation:** [Read the AI-Pong docs](https://coderstech.github.io/projects/AI-Pong/docs/) | [Release 1.4.0 details](docs/releases/1.4.0.md)
 
 ![img.png](img.png)
 
@@ -121,8 +121,8 @@ is necessarily the fitness winner. This lifecycle animation is planned, not
 delivered.
 
 **Animated explanations:** watch the
-[network forward pass](https://coderstech.github.io/AI-Pong/architecture/#neural-network-animation)
-and [two-point crossover](https://coderstech.github.io/AI-Pong/architecture/#crossover-animation)
+[network forward pass](https://coderstech.github.io/projects/AI-Pong/docs/architecture/#neural-network-animation)
+and [two-point crossover](https://coderstech.github.io/projects/AI-Pong/docs/architecture/#crossover-animation)
 in the architecture guide. These are illustrative, source-driven examples,
 not footage of a trained elite. See the
 [rendering instructions](docs/architecture.md#regenerating-the-animations)
@@ -222,6 +222,44 @@ Install the development extras with `python -m pip install -e ".[dev]"`, then ru
 | Gameplay demo GIF | Capture planned |
 
 To add the demo, record a short gameplay session (showing both the play area and network panel), trim it to a few seconds, resize/optimize it as a GIF, and save it as `assets/demo.gif`. Then replace the demo-capture comment near the top of this README with an image link to that file.
+
+## Documentation publishing
+
+Documentation sources stay in this repository. `.github/workflows/docs.yml`
+builds them with `mkdocs build --strict` on pushes to `main` or manual dispatch
+from `main`, then commits the generated files to the `main` branch of
+`CodeRSTech/coderstech.github.io` under `projects/AI-Pong/docs/`.
+Only that folder is synchronized (including removal of stale docs files).
+The portfolio and `projects/AI-Pong/index.html` are untouched; the latter is
+reserved for a future landing page in the user-site repository.
+
+Required setup:
+
+1. Create a fine-grained personal access token with access **only** to
+   `CodeRSTech/coderstech.github.io` and **Contents: Read and write** permission.
+   Store it as the `PAGES_TOKEN` Actions secret in AI-Pong (repository secret
+   or secret in its `github-pages` environment). The default `GITHUB_TOKEN`
+   cannot write to another repository.
+2. Ensure the token's owner can push to the destination's `main` branch and
+   satisfies any branch protection rules. Approve the token for the
+   organization if required.
+3. In the user-site repository, configure Pages to publish its Jekyll site
+   from **`main` / root**, or ensure its existing Pages workflow builds that
+   branch on push and includes `projects/AI-Pong/docs/`. Do not add a root
+   `.nojekyll`: the portfolio still needs Jekyll.
+4. Run **Deploy documentation** from AI-Pong's Actions tab on `main`.
+   The destination's Pages build publishes
+   <https://coderstech.github.io/projects/AI-Pong/docs/>.
+
+This replaces AI-Pong's standalone project Pages deployment; it does not
+redirect or remove an already published `https://coderstech.github.io/AI-Pong/`
+site. The token-authenticated destination push triggers its Pages build;
+AI-Pong's workflow success means the files were committed, not that the
+destination build has finished. Runs are serialized, unchanged output makes
+no commit, and conflicting destination edits fail rather than force-push.
+
+To preview locally, install `mkdocs` and `mkdocs-bootswatch`, then run
+`mkdocs serve` from the repository root.
 
 ## Contributing
 
