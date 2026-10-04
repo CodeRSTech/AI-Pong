@@ -1,4 +1,15 @@
-"""Manim scenes. Render both with: python -m scripts.render_animations."""
+"""Manim scenes for the network forward pass and two-point crossover videos.
+
+Render both from the repository root with ``python -m scripts.render_animations``.
+The scenes are organized as short story phases; visual text, frame coordinates,
+and ``run_time`` / ``wait`` values are the main presentation edit points.
+
+Scene outline:
+1. NeuralNetworkAnimation: observations -> input layer -> weights -> action.
+2. CrossoverAnimation: parents -> copied interval -> reciprocal children.
+"""
+
+from typing import NamedTuple
 
 import numpy as np
 from manim import (
@@ -14,6 +25,7 @@ from manim import (
     MoveAlongPath,
     Rectangle,
     Scene,
+    Text,
     Transform,
     TransformFromCopy,
     VGroup,
@@ -37,18 +49,26 @@ from scripts.animation_theme import (
 config.background_color = COLORS["background"]
 
 
+# Shared network drawing helpers
+
 def caption(content, size=22, color=None):
+    """Create scene text using the shared animation font and palette."""
     return text(content, size, color or COLORS["text"])
 
 
 def fit_width(mobject, width):
+    """Keep a text mobject within a known horizontal layout region."""
     if mobject.width > width:
         mobject.scale_to_fit_width(width)
     return mobject
 
 
 def network_objects(sizes, center, width=7.0, height=3.6, radius=0.09, weights=None):
-    """Build fully connected nodes and indexed edges without opening an Arcade window."""
+    """Build indexed node layers and edges for a fully connected network.
+
+    ``edges[layer][target][source]`` preserves the same indexing as the
+    layer's weight matrix, so the scenes can highlight individual connections.
+    """
     nodes = []
     edges = []
     for layer_index, size in enumerate(sizes):
@@ -100,6 +120,7 @@ def network_objects(sizes, center, width=7.0, height=3.6, radius=0.09, weights=N
 
 
 def _signed_node_animation(node, value):
+    """Color one neuron by its signed activation."""
     return node.animate.set_fill(
         signed_color(float(value)),
         opacity=signed_opacity(float(value)),
@@ -107,6 +128,7 @@ def _signed_node_animation(node, value):
 
 
 def _network_value_labels(nodes, values, size=10):
+    """Place a formatted numeric activation over each corresponding node."""
     return [
         VGroup(*[
             caption(
@@ -120,7 +142,11 @@ def _network_value_labels(nodes, values, size=10):
     ]
 
 
+# Neural-network animation
+
 class NeuralNetworkAnimation(Scene):
+    """Explain one source-derived input as it passes through the live model."""
+
     def construct(self):
         example = network_example()
         self.add(background())
@@ -130,7 +156,6 @@ class NeuralNetworkAnimation(Scene):
             "Actual PyTorch model | seed 334 | illustrative, not trained gameplay",
             "NETWORK DEMO",
         )
-
         nodes, edges, diagram = network_objects(
             example.sizes,
             np.array([0.0, -0.3, 0]),
@@ -139,6 +164,58 @@ class NeuralNetworkAnimation(Scene):
             radius=0.15,
             weights=example.weights,
         )
+
+        headings = self._layer_headings(example, nodes)
+        input_labels, output_labels = self._node_labels(example, nodes)
+        self._show_input_vector(example, nodes, headings, input_labels)
+        value_labels = self._reveal_network(
+            example, nodes, edges, headings, output_labels
+        )
+        status = caption(
+            "INPUTS -> tanh -> ReLU -> sigmoid | edge color = weight sign",
+            17,
+            COLORS["cyan"],
+        ).move_to([0, -2.55, 0])
+        self.play(FadeIn(status))
+        self.wait(0.8)
+
+        self._explain_focused_neuron(
+            example, nodes, diagram, headings, input_labels,
+            output_labels, value_labels, status,
+        )
+        self._animate_forward_pass(example, nodes, value_labels, status)
+        self._show_action_decision(example, nodes, status)
+
+    def _layer_headings(self, example, nodes):
+        """Label the input, hidden, and output layers above the network."""
+        headings = VGroup()
+        for index, layer in enumerate(nodes):
+            label = (
+                f"Inputs ({example.sizes[index]})" if index == 0 else
+                f"{example.activations[index - 1]} ({example.sizes[index]})"
+            )
+            headings.add(caption(label, 14, COLORS["muted"]).move_to(
+                [layer[0].get_x(), 2.05, 0]
+            ))
+        return headings
+
+    def _node_labels(self, example, nodes):
+        """Create the observation labels and the two action labels."""
+        input_labels = VGroup(*[
+            fit_width(caption(label, 13, COLORS["muted"]), 1.75).next_to(
+                node, [-1, 0, 0], buff=0.12
+            )
+            for label, node in zip(example.inputs, nodes[0])
+        ])
+        output_labels = VGroup(*[
+            caption(label, 14).next_to(node, [1, 0, 0], buff=0.13)
+            for label, node in zip(example.actions, nodes[-1])
+        ])
+        return input_labels, output_labels
+
+    def _show_input_vector(self, example, nodes, headings, input_labels):
+        """Show the fixed observations, then hand them off to the input nodes."""
+        # Card size and row positions are the main controls for this opening layout.
         observation_card = card(10.8, 4.15).move_to([0, -0.1, 0])
         observation_title = caption("ONE FIXED INPUT VECTOR", 18, COLORS["green"]).move_to(
             [0, 1.55, 0]
@@ -157,29 +234,11 @@ class NeuralNetworkAnimation(Scene):
             13,
             COLORS["muted"],
         ).move_to([0, -1.78, 0])
-        headings = VGroup()
-        for index, layer in enumerate(nodes):
-            label = (
-                f"Inputs ({example.sizes[index]})" if index == 0 else
-                f"{example.activations[index - 1]} ({example.sizes[index]})"
-            )
-            headings.add(caption(label, 14, COLORS["muted"]).move_to(
-                [layer[0].get_x(), 2.05, 0]
-            ))
-        input_labels = VGroup(*[
-            fit_width(caption(label, 13, COLORS["muted"]), 1.75).next_to(
-                node, [-1, 0, 0], buff=0.12
-            )
-            for label, node in zip(example.inputs, nodes[0])
-        ])
-        output_labels = VGroup(*[
-            caption(label, 14).next_to(node, [1, 0, 0], buff=0.13)
-            for label, node in zip(example.actions, nodes[-1])
-        ])
         self.play(FadeIn(observation_card), FadeIn(observation_title))
         for row in input_rows:
             self.play(FadeIn(row), run_time=0.12)
         self.play(FadeIn(input_note))
+        # Increase this pause if viewers need longer to read the input values.
         self.wait(1.2)
         input_signals = [
             Dot(
@@ -190,15 +249,14 @@ class NeuralNetworkAnimation(Scene):
             for index, value in enumerate(example.observation)
         ]
         self.add(*input_signals)
+        # Establish the input layer on its own before revealing any weights.
         self.play(
             FadeOut(VGroup(
                 observation_card, observation_title, input_rows, input_note
             )),
-            FadeIn(headings),
+            FadeIn(headings[0]),
             FadeIn(input_labels),
-            FadeIn(output_labels),
-            Create(diagram[0]),
-            LaggedStart(*[FadeIn(layer) for layer in nodes], lag_ratio=0.12),
+            LaggedStart(*[FadeIn(node) for node in nodes[0]], lag_ratio=0.12),
             *[
                 signal.animate.move_to(nodes[0][index].get_center())
                 for index, signal in enumerate(input_signals)
@@ -207,21 +265,47 @@ class NeuralNetworkAnimation(Scene):
         )
         self.remove(*input_signals)
 
+    def _reveal_network(self, example, nodes, edges, headings, output_labels):
+        """Reveal each connection matrix before the layer it feeds."""
         value_labels = _network_value_labels(nodes, example.values, size=9)
         self.play(*[
             _signed_node_animation(node, value)
             for node, value in zip(nodes[0], example.values[0])
         ], FadeIn(value_labels[0]), run_time=0.7)
-        status = caption(
-            "INPUTS -> tanh -> ReLU -> sigmoid | edge color = weight sign",
-            17,
-            COLORS["cyan"],
-        ).move_to([0, -2.55, 0])
-        self.play(FadeIn(status))
-        self.wait(0.8)
 
+        # These run times control the pace of the layer-by-layer reveal.
+        for layer_index, layer_edges in enumerate(edges):
+            edge_group = VGroup(*[
+                edge for row in layer_edges for edge in row
+            ])
+            self.play(Create(edge_group), run_time=0.65)
+            layer_animations = [
+                LaggedStart(
+                    *[FadeIn(node) for node in nodes[layer_index + 1]],
+                    lag_ratio=0.12,
+                ),
+                FadeIn(headings[layer_index + 1]),
+            ]
+            if layer_index == len(edges) - 1:
+                layer_animations.append(FadeIn(output_labels))
+            self.play(*layer_animations, run_time=0.6)
+        return value_labels
+
+    def _explain_focused_neuron(
+        self,
+        example,
+        nodes,
+        diagram,
+        headings,
+        input_labels,
+        output_labels,
+        value_labels,
+        status,
+    ):
+        """Zoom in on one hidden neuron and show its weighted-sum calculation."""
         focus_index = example.focused_neuron
         focus_node = nodes[1][focus_index]
+        # These card and label coordinates control the focused-neuron layout.
         focus_heading = caption(
             f"ONE ACTUAL tanh NEURON | index {focus_index}", 15, COLORS["green"]
         ).move_to([-5.05, 2.0, 0])
@@ -264,6 +348,8 @@ class NeuralNetworkAnimation(Scene):
             node for index, node in enumerate(nodes[1])
             if index != focus_index
         ])
+
+        # Isolate one neuron and reserve the right side for its numerical explanation.
         self.play(
             FadeOut(status),
             FadeOut(diagram[0]),
@@ -321,6 +407,8 @@ class NeuralNetworkAnimation(Scene):
             run_time=0.55,
         )
         self.wait(1.6)
+
+        # Restore the full network before continuing the forward-pass story.
         self.play(
             FadeOut(VGroup(
                 math_card, math_title, math_rows, bias_line, sum_line,
@@ -345,6 +433,8 @@ class NeuralNetworkAnimation(Scene):
         )
         self.play(FadeIn(status))
 
+    def _animate_forward_pass(self, example, nodes, value_labels, status):
+        """Animate representative signals and actual activations through layers."""
         for layer_index in range(len(example.weights)):
             source_values = example.values[layer_index]
             target_values = example.values[layer_index + 1]
@@ -386,6 +476,8 @@ class NeuralNetworkAnimation(Scene):
             ], FadeIn(value_labels[layer_index + 1]), run_time=0.6)
             self.wait(0.75)
 
+    def _show_action_decision(self, example, nodes, status):
+        """Highlight the thresholded output and summarize the resulting action."""
         for index, node in enumerate(nodes[-1]):
             node.set_stroke(
                 COLORS["green"] if example.decisions[index] else COLORS["border"],
@@ -413,7 +505,20 @@ class NeuralNetworkAnimation(Scene):
         self.wait(2.6)
 
 
+# Crossover strip drawing helpers
+
+class _GenomeStripLayout(NamedTuple):
+    """Keep the named Manim objects needed across the crossover strip phases."""
+
+    parent_rows: list[tuple[VGroup, VGroup, Text, str]]
+    copy_rows: list[tuple[VGroup, VGroup, Text, str]]
+    cut_lines: VGroup
+    interval_label: Text
+    parents_note: Text
+
+
 def _strip_row(total, cell_width, y, color, label, label_color=None, selected=None):
+    """Build an indexed genome row, leaving a gap for an optional cut interval."""
     cells = VGroup()
     indices = VGroup()
     for index in range(total):
@@ -434,6 +539,7 @@ def _strip_row(total, cell_width, y, color, label, label_color=None, selected=No
 
 
 def _segment_copy(cells, indices, start, end, y, label_color):
+    """Copy a half-open genome interval to use as a moving donor segment."""
     segment = VGroup(
         *[cell.copy() for cell in cells[start:end]],
         *[index.copy() for index in indices[start:end]],
@@ -444,7 +550,11 @@ def _segment_copy(cells, indices, start, end, y, label_color):
     return VGroup(segment, segment_label)
 
 
+# Crossover animation
+
 class CrossoverAnimation(Scene):
+    """Show reciprocal parent-segment exchange and resulting parameter owners."""
+
     def construct(self):
         example = crossover_example()
         start, end = example.cut_points
@@ -457,7 +567,17 @@ class CrossoverAnimation(Scene):
         )
 
         total = sum(example.sizes[1:])
+        # This width controls the genome strip's total span on screen.
         cell_width = min(0.47, 10.5 / total)
+        strips = self._show_genome_strips_and_cuts(
+            total, cell_width, start, end
+        )
+        self._exchange_donor_segments(total, cell_width, start, end, strips)
+        child_diagrams = self._show_child_networks(example)
+        self._explain_weight_ownership(example, child_diagrams)
+
+    def _show_genome_strips_and_cuts(self, total, cell_width, start, end):
+        """Introduce immutable parents, working copies, and the selected range."""
         source_rows = []
         for y, name, color in (
             (1.65, "PARENT A / original", COLORS["parent_a"]),
@@ -494,6 +614,7 @@ class CrossoverAnimation(Scene):
             for row in copy_rows
             for item in row[:3]
         ])
+        # The parent and working-copy y positions define the strip layout.
         cuts = VGroup(*[
             DashedLine(
                 [
@@ -519,6 +640,16 @@ class CrossoverAnimation(Scene):
         self.play(Create(cuts), FadeIn(cut_label))
         self.wait(0.8)
 
+        return _GenomeStripLayout(
+            source_rows, copy_rows, cuts, cut_label, immutable_note
+        )
+
+    def _exchange_donor_segments(
+        self, total, cell_width, start, end, strips: _GenomeStripLayout
+    ):
+        """Move selected copied segments into reciprocal child genome rows."""
+        source_rows = strips.parent_rows
+        copy_rows = strips.copy_rows
         # Copy the selected material out of the working strips; source parents above never move.
         donor_segments = []
         for copy_index in (1, 0):
@@ -601,23 +732,22 @@ class CrossoverAnimation(Scene):
         self.play(FadeIn(note))
         self.wait(1.7)
         self.play(FadeOut(VGroup(
-            immutable_note, cut_label, cuts, note,
+            strips.parents_note, strips.interval_label, strips.cut_lines, note,
             *[VGroup(*row[:3]) for row in source_rows],
             *[VGroup(*row[:3]) for row in copy_rows],
             *[VGroup(*row[:3], row[3]) for row in child_rows],
             *[segment for segment, _, _, _ in donor_segments],
         )))
 
+    def _show_child_networks(self, example):
+        """Build the two child diagrams and color each neuron's donor."""
         child_diagrams = []
-        child_labels = VGroup()
-        for center_x, child, selected_color, base_color, masks in (
+        for center_x, child, selected_color, base_color in (
             (
                 -3.45, "Child A", COLORS["parent_b"], COLORS["parent_a"],
-                example.weights,
             ),
             (
                 3.45, "Child B", COLORS["parent_a"], COLORS["parent_b"],
-                example.weights,
             ),
         ):
             nodes, edges, diagram = network_objects(
@@ -645,10 +775,12 @@ class CrossoverAnimation(Scene):
                     )
                     node.set_stroke(donor).set_fill(donor, opacity=0.38)
             label = caption(child, 20).move_to([center_x, 2.15, 0])
-            child_labels.add(label)
             child_diagrams.append((nodes, edges, selected_color, base_color))
             self.play(FadeIn(diagram), FadeIn(label), run_time=0.65)
+        return child_diagrams
 
+    def _explain_weight_ownership(self, example, child_diagrams):
+        """Highlight outgoing weight columns inherited from selected neurons."""
         inherit_note = caption(
             "Selected neuron: donor bias + incoming row | cyan/green = parameter owner",
             14,
