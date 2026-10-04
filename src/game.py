@@ -29,6 +29,7 @@ from src.components.colors import (
 )
 from src.components.playzone import PlayZone
 from src.ga.network import BatchedPopulationBrain
+from src.ga.player import ACTION_LABELS, OBSERVATION_LABELS
 from src.utils import logger
 from src.variables import VARIABLES
 
@@ -42,11 +43,8 @@ class _PongWindow(arcade.Window):
     network_panel_margin_x = 140
     network_panel_margin_y = 80
     network_fallback_architecture = [7, 8, 6, 2]
-    network_input_labels = ["Ball dist x", "Ball dist y",
-                            "Paddle pos x",
-                            "Ball pos x", "Ball pos y",
-                            "Ball speed x", "Ball speed y"]
-    network_output_labels = ["Left", "Right"]
+    network_input_labels = OBSERVATION_LABELS
+    network_output_labels = ACTION_LABELS
 
     def __init__(self, game_ref: "Game"):
         self.game = game_ref
