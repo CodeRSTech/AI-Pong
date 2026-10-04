@@ -10,6 +10,18 @@ from src.ga.network import NeuralNet
 from src.utils.functions import squash
 
 
+OBSERVATION_LABELS = (
+    "Ball dist x",
+    "Ball dist y",
+    "Paddle pos x",
+    "Ball pos x",
+    "Ball pos y",
+    "Ball speed x",
+    "Ball speed y",
+)
+ACTION_LABELS = ("Left", "Right")
+
+
 class IndividualPlayer:
     """
     Class for an Individual (AI) in the Population.
