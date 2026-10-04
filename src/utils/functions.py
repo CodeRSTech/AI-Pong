@@ -29,7 +29,74 @@ class ActivationsMismatchError(SyntaxError):
     def __str__(self):
         return f"Activations mismatch in layer {self.layer_index}: '{self.activation1}' and '{self.activation2}'"
 
-def two_point_crossover(player_1, player_2):
+
+def crossover_neuron_masks(network, cut_points: tuple[int, int]) -> list[list[bool]]:
+    """Map a half-open crossover interval onto each layer's output neurons."""
+    if not network.layers:
+        raise ValueError("Network must contain at least one layer.")
+
+    try:
+        start, end = cut_points
+    except (TypeError, ValueError) as error:
+        raise ValueError("cut_points must contain two increasing neuron indices.") from error
+
+    total_neurons = sum(layer[0].out_features for layer in network.layers)
+    if (
+        not isinstance(start, int)
+        or isinstance(start, bool)
+        or not isinstance(end, int)
+        or isinstance(end, bool)
+        or start < 0
+        or end <= start
+        or end > total_neurons
+    ):
+        raise ValueError(
+            f"cut_points must satisfy 0 <= start < end <= {total_neurons}."
+        )
+
+    masks = []
+    neuron_offset = 0
+    for layer in network.layers:
+        out_features = layer[0].out_features
+        masks.append([
+            start <= neuron_offset + neuron_index < end
+            for neuron_index in range(out_features)
+        ])
+        neuron_offset += out_features
+    return masks
+
+
+def crossover_parameter_masks(
+    network, cut_points: tuple[int, int]
+) -> tuple[list[list[list[bool]]], list[list[bool]]]:
+    """Map selected neurons to the incoming-weight and bias parameters they inherit."""
+    neuron_masks = crossover_neuron_masks(network, cut_points)
+    weight_masks = []
+    bias_masks = []
+    previous_mask = None
+
+    for layer, selected_rows in zip(network.layers, neuron_masks):
+        linear = layer[0]
+        if previous_mask is not None and len(previous_mask) != linear.in_features:
+            raise ValueError("Network layers must have matching input/output dimensions.")
+        weight_masks.append([
+            [
+                selected_rows[target_index]
+                or (
+                    previous_mask is not None
+                    and previous_mask[source_index]
+                )
+                for source_index in range(linear.in_features)
+            ]
+            for target_index in range(linear.out_features)
+        ])
+        bias_masks.append(selected_rows.copy())
+        previous_mask = selected_rows
+
+    return weight_masks, bias_masks
+
+
+def two_point_crossover(player_1, player_2, *, cut_points: tuple[int, int] | None = None):
     """
     Crossover contiguous neurons, including each selected neuron's outgoing
     weights in the following layer.
@@ -50,40 +117,35 @@ def two_point_crossover(player_1, player_2):
         if linear1.weight.shape != linear2.weight.shape or type(layer1[1]) is not type(layer2[1]):
             raise ValueError("Parents must have matching neural-network architectures.")
 
-    total_neurons = sum(layer[0].out_features for layer in net1.layers)
-    cross_points = sorted(torch.randperm(total_neurons + 1)[:2].tolist())
-    inherited_neurons = set(range(cross_points[0], cross_points[1]))
+    if cut_points is None:
+        total_neurons = sum(layer[0].out_features for layer in net1.layers)
+        cut_points = tuple(sorted(torch.randperm(total_neurons + 1)[:2].tolist()))
+    weight_masks, bias_masks = crossover_parameter_masks(net1, cut_points)
 
     new_player = IndividualPlayer()
     new_net = deepcopy(net1)
-    neuron_offset = 0
-    previous_mask = None
 
     with torch.no_grad():
-        for layer1, layer2, child_layer in zip(net1.layers, net2.layers, new_net.layers):
+        for layer_index, (layer1, layer2, child_layer) in enumerate(
+            zip(net1.layers, net2.layers, new_net.layers)
+        ):
             parent1_linear = layer1[0]
             parent2_linear = layer2[0]
             child_linear = child_layer[0]
-            out_features = parent1_linear.out_features
-            selected = [
-                neuron_offset + neuron_index in inherited_neurons
-                for neuron_index in range(out_features)
-            ]
-            row_mask = torch.tensor(selected, dtype=torch.bool, device=child_linear.weight.device)
-
             child_linear.weight.copy_(parent1_linear.weight)
             child_linear.bias.copy_(parent1_linear.bias)
-            child_linear.weight[row_mask] = parent2_linear.weight[row_mask]
-            child_linear.bias[row_mask] = parent2_linear.bias[row_mask]
-
-            if previous_mask is not None:
-                column_mask = torch.tensor(
-                    previous_mask, dtype=torch.bool, device=child_linear.weight.device
-                )
-                child_linear.weight[:, column_mask] = parent2_linear.weight[:, column_mask]
-
-            previous_mask = selected
-            neuron_offset += out_features
+            weight_mask = torch.tensor(
+                weight_masks[layer_index],
+                dtype=torch.bool,
+                device=child_linear.weight.device,
+            )
+            bias_mask = torch.tensor(
+                bias_masks[layer_index],
+                dtype=torch.bool,
+                device=child_linear.bias.device,
+            )
+            child_linear.weight[weight_mask] = parent2_linear.weight[weight_mask]
+            child_linear.bias[bias_mask] = parent2_linear.bias[bias_mask]
 
     new_net.last_input = None
     new_net.last_activations = None
