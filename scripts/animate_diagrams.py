@@ -172,7 +172,7 @@ class NeuralNetworkAnimation(Scene):
             example, nodes, edges, headings, output_labels
         )
         status = caption(
-            "INPUTS -> tanh -> ReLU -> sigmoid | edge color = weight sign",
+            "INPUTS -> tanh -> ReLU -> sigmoid = weight sign",
             17,
             COLORS["cyan"],
         ).move_to([0, -2.55, 0])
@@ -303,6 +303,10 @@ class NeuralNetworkAnimation(Scene):
         status,
     ):
         """Zoom in on one hidden neuron and show its weighted-sum calculation."""
+        # FIXME: After the focused-neuron explanation, the focused-neuron is not restored to the scene,
+        #  i.e. it stays in the same position and scale as it was during the explanation.
+        #  This is because the focused node is not being added back to the scene after the explanation.
+        #  To fix this, we need to add the focused node back to the scene after the explanation is done.
         focus_index = example.focused_neuron
         focus_node = nodes[1][focus_index]
         # These card and label coordinates control the focused-neuron layout.
