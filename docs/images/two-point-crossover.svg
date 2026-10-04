@@ -3,26 +3,26 @@
   <desc id="desc">Two cut points delimit a contiguous interval in the ordered layer outputs. Reciprocal offspring inherit that interval from opposite parents and the rest of their network from the other parent.</desc>
   <defs>
     <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
-      <path d="M0 0 9 4.5 0 9z" fill="#64748b"/>
+      <path d="M0 0 9 4.5 0 9z" fill="#94a3b8"/>
     </marker>
     <style>
-      text { font-family: "Segoe UI", Arial, sans-serif; fill: #172033; }
+      text { font-family: "Segoe UI", Arial, sans-serif; fill: #e2e8f0; }
       .title { font-size: 25px; font-weight: 700; }
-      .subtitle { font-size: 14px; fill: #475569; }
+      .subtitle { font-size: 14px; fill: #cbd5e1; }
       .label { font-size: 16px; font-weight: 700; }
-      .small { font-size: 13px; fill: #334155; }
-      .tiny { font-size: 11px; fill: #475569; }
-      .panel { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
-      .layer { fill: #ffffff; stroke: #94a3b8; stroke-width: 1.5; }
+      .small { font-size: 13px; fill: #e2e8f0; }
+      .tiny { font-size: 11px; fill: #cbd5e1; }
+      .panel { fill: #1e293b; stroke: #475569; stroke-width: 1.5; }
+      .layer { fill: #0f172a; stroke: #64748b; stroke-width: 1.5; }
       .conn { stroke: #94a3b8; stroke-width: 2; fill: none; marker-end: url(#arrow); }
-      .parentA { fill: #dbeafe; stroke: #2563eb; stroke-width: 1.5; }
-      .parentB { fill: #ffe4e6; stroke: #e11d48; stroke-width: 1.5; }
-      .slice { fill: #fbbf24; fill-opacity: .42; stroke: #d97706; stroke-width: 1.5; }
-      .cut { stroke: #be123c; stroke-width: 2.5; stroke-dasharray: 8 6; }
+      .parentA { fill: #1e3a8a; stroke: #60a5fa; stroke-width: 1.5; }
+      .parentB { fill: #881337; stroke: #fb7185; stroke-width: 1.5; }
+      .slice { fill: #f59e0b; fill-opacity: .58; stroke: #fbbf24; stroke-width: 1.5; }
+      .cut { stroke: #fb7185; stroke-width: 2.5; stroke-dasharray: 8 6; }
     </style>
   </defs>
 
-  <rect width="1000" height="620" rx="18" fill="#ffffff"/>
+  <rect width="1000" height="620" rx="18" fill="#0b1120"/>
   <text x="38" y="47" class="title">Two-point crossover: exchange a middle slice</text>
   <text x="38" y="73" class="subtitle">The network view is illustrative; the selected interval follows layer-output order in the implementation.</text>
 
@@ -65,7 +65,7 @@
   <text x="731" y="360" class="small">comes from Parent B for</text>
   <text x="731" y="380" class="small">Child A (example).</text>
 
-  <rect x="32" y="439" width="936" height="151" rx="14" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+  <rect x="32" y="439" width="936" height="151" rx="14" fill="#172033" stroke="#475569" stroke-width="1.5"/>
   <text x="54" y="473" class="label">Reciprocal offspring</text>
   <text x="54" y="505" class="small">Child A = Parent A outside the interval + Parent B inside it</text>
   <text x="54" y="532" class="small">Child B = Parent B outside the interval + Parent A inside it</text>
