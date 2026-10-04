@@ -55,8 +55,9 @@ through the flattened weight tensors.
 The static diagram above remains available without video playback.
 
 The clip highlights the half-open interval `[3, 12)` in the ordered list of
-layer-output neurons, exchanges that interval, and then colors the children's
-biases and weights by their source parent (blue for A, pink for B). Input
+layer-output neurons, separates copied segments, transports the donor segments
+into new children while leaving the parents intact, and then colors the children's
+biases and weights by their source parent (cyan for A, green for B). Input
 observations are not inherited parameters. For illustration, both children
 use the same cut points; the GA samples cut points independently for each
 actual crossover call. The parameter colors are checked against children
@@ -90,12 +91,113 @@ above 0.5 activate the corresponding **Left** or **Right** action.
 [Watch or download the network animation](images/animations/neural-network.mp4).
 The static diagram above remains available without video playback.
 
-The clip builds the network, displays seven illustrative normalized inputs,
-and propagates them through the actual PyTorch model. It displays the computed
+The clip carries seven illustrative normalized inputs into the network, focuses
+on an actual neuron's weighted contributions, bias, sum and activation, and then
+propagates signals through the actual PyTorch model. Positive values are blue,
+negative values are pink/coral, and zero is neutral; cyan/green remain portfolio
+accents and crossover donor colors, not activation signs. It displays the computed
 activations and applies the sigmoid output threshold to obtain a paddle
 action. This is a freshly initialized network with seed `334`, **not a trained
 elite or a gameplay performance demonstration**. Both active outputs, or
 neither active output, result in no movement.
+
+### Modular gameplay explanations
+
+The three additional Manim scenes are driven by one validated gameplay-trace
+JSON file and one explicitly selected decision index:
+
+| Scene | Recorded information explained |
+| --- | --- |
+| `observations` | The y-down court state and the seven observation formulas, with the actual input vector. |
+| `network-actions` | That same input, checkpoint activations and signed weights, and the actual two sigmoid decisions. |
+| `actions-execution` | The matching action, measured paddle displacement, legal center bounds, CPU movement, and subsequent recorded states/events. |
+
+These are independent modules rather than clips spliced from separate episodes.
+The trace records checkpoint SHA-256, capture configuration and software
+versions, parameter matrices/biases once, and pre-step/observation/activation/
+action/post-step data per decision. Missing run, generation, and validation
+provenance is explicitly marked `unknown`. The capture command requires a
+specific checkpoint; it never selects the latest file from `runs/` and does
+not change training or physics:
+
+```powershell
+python -m scripts.capture_gameplay_trace --checkpoint D:\models\selected-generation.pt --seed 42 --steps 90 --output D:\animation-work\gameplay-trace.json
+```
+
+To render the three modules from decision 12 of that same trace:
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.render_animations --scenes observations network-actions actions-execution --trace D:\animation-work\gameplay-trace.json --decision-index 12 --quality l --output-dir D:\animation-work\preview
+```
+
+The chosen decision controls presentation only; it is not a reliability
+evaluation. A reported two-hour training run produced a player scoring below
+the CPU; that observation is not a diagnosis, and no suitable performance
+demonstration is assumed imminent. Trained gameplay publication remains deferred.
+Seeded test checkpoints may verify capture and preview layout but are not
+trained gameplay. The terminal-style scene backgrounds use the portfolio
+tokens; crossover ownership uses cyan/green, while checkpoint weight signs
+keep the source game's blue-positive/coral-negative colors and a separate
+legend.
+
+### Future checkpoint-to-animation workflow
+
+The capture and rendering tools are ready for a future selected model. A
+checkpoint need not be mathematically optimal to explain its decisions, but
+presenting it as successful gameplay requires disclosed evaluation evidence.
+Training duration alone does not establish quality.
+
+1. **Preserve the model and evidence.** Copy a stable generation checkpoint to
+   an authoring directory, together with its run's `settings.json`, relevant
+   `metrics.csv` and `validation.csv` rows, and available
+   `validation_scenarios.jsonl` entry. Avoid reading a live `elite_model.pt`
+   while it is overwritten. The latest elite is not necessarily best-ever or
+   validation-passing. Retain the generation identifier and actual scenario
+   count; the default two validation games give limited reliability evidence.
+2. **Capture an explicit example.** Supply that immutable checkpoint, a scenario
+   seed, a bounded number of decisions (1–1000), and a trace output path. The
+   trace records the model SHA-256, parameters, settings used for capture,
+   observations, actual activations/actions and consecutive simulation states.
+   It is an offline seeded example, not a replay of the original training run.
+3. **Attach provenance honestly.** Optional `--run-id`, `--generation`, and
+   `--validation-json` attach your supplied metadata. The JSON must be an
+   object; it is not an automatic CSV/JSONL importer or independent verification
+   of performance. Missing provenance stays `unknown`. Preserve original
+   evidence separately rather than replacing it with a hand-written summary.
+4. **Check capture settings.** Capture uses the current `src/variables.py`
+   defaults, not automatic settings-file import. Its default step delta is
+   `1 / (FPS × SPEED × STEPS_PER_FRAME)`. `--step-delta` changes the recorded
+   simulation clock increment, not the physics' per-step movement rules.
+   Document differences from the training configuration. Explanatory pauses
+   and slow motion alter presentation timing only.
+5. **Select one recorded decision.** Inspect the JSON's zero-based `decisions`
+   array and choose an index that shows the intended lesson. Render all three
+   modules with the same trace and `--decision-index`. Do not splice unrelated
+   observations and actions or choose a flattering example as proof of general
+   reliability. Trace validation rejects malformed dimensions/nonfinite data
+   and checks recorded inference against the stored parameters.
+6. **Preview, then render.** Use `--quality l` and a private `--output-dir`.
+   Inspect positions, normalization, signed colors, output thresholds, actual
+   displacement, annotation readability and causal continuity. Only afterward
+   render with `--quality h` to produce 1080p/60fps final assets.
+7. **Publish deliberately.** The modules produce `gameplay-observations.mp4`,
+   `network-actions.mp4` and `actions-execution.mp4`. Add controlled video
+   playback, descriptive text and corresponding poster/fallback assets in the
+   docs or portfolio after approval. Keep the checkpoint hash and example
+   provenance available and describe limitations. Rendering does not commit,
+   push or integrate these new videos automatically.
+
+For example, attach provenance while capturing:
+
+```powershell
+python -m scripts.capture_gameplay_trace --checkpoint D:\models\selected-generation.pt --seed 42 --steps 90 --output D:\animation-work\gameplay-trace.json --run-id selected-run --generation 120 --validation-json D:\animation-work\validation-summary.json
+```
+
+After reviewing the preview, render the same selected decision at final quality:
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.render_animations --scenes observations network-actions actions-execution --trace D:\animation-work\gameplay-trace.json --decision-index 12 --quality h --output-dir D:\animation-work\final
+```
 
 The model is implemented with PyTorch `nn.Linear` layers. For population
 inference, `BatchedPopulationBrain` stacks the individuals' weights and
@@ -167,7 +269,9 @@ python -m scripts.render_animations
 On Windows, if Manim is installed in the project's virtual environment, use
 `.\.venv\Scripts\python.exe -m scripts.render_animations`.
 The renderer uses ordinary text rather than TeX, so these scenes do not
-require LaTeX.
+require LaTeX. It selects installed Fira Code when available and otherwise
+prints that it is using the installed Consolas monospace fallback; fonts are
+not installed or bundled by the renderer.
 
 The command writes `neural-network.mp4` and `two-point-crossover.mp4` beneath
 `docs/images/animations/`, using a temporary directory for intermediate

@@ -3,20 +3,20 @@
   <desc id="desc">Fully connected neural network with live layer sizes, activations, game observations, and paddle actions.</desc>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto">
-      <path d="M0 0 8 4 0 8z" fill="#94a3b8"/>
+      <path d="M0 0 8 4 0 8z" fill="#71717a"/>
     </marker>
     <style>
-      text { font-family: "Segoe UI", Arial, sans-serif; fill: #e2e8f0; }
+      text { font-family: Consolas, "Fira Code", monospace; fill: #f4f4f5; }
       .title { font-size: 28px; font-weight: 700; }
-      .subtitle { font-size: 14px; fill: #cbd5e1; }
+      .subtitle { font-size: 14px; fill: #a1a1aa; }
       .heading { font-size: 17px; font-weight: 700; }
-      .body { font-size: 13px; fill: #cbd5e1; }
-      .caption { font-size: 11px; fill: #94a3b8; }
+      .body { font-size: 13px; fill: #a1a1aa; }
+      .caption { font-size: 11px; fill: #71717a; }
       .node { stroke-width: 2; }
       .edge { fill: none; stroke-width: 1.15; opacity: .62; }
     </style>
   </defs>
-  <rect width="100%" height="100%" rx="18" fill="#0b1120"/>
+  <rect width="100%" height="100%" rx="18" fill="#09090b"/>
 <text x="38" y="48" class="title">AI-Pong neural network</text>
 <text x="38" y="76" class="subtitle">Layer sizes and activations are read from the current IndividualPlayer model.</text>
 <line x1="315" y1="277.7" x2="585" y2="242.0" class="edge" stroke="#64748b"/>
@@ -137,57 +137,57 @@
 <line x1="915" y1="670.6" x2="1185" y2="527.7" class="edge" stroke="#64748b"/>
 <text x="300" y="139" text-anchor="middle" class="heading">Observations (7)</text>
 <text x="300" y="161" text-anchor="middle" class="caption">normalized game state</text>
-<circle cx="300" cy="277.7" r="13" fill="#334155" stroke="#94a3b8" class="node"/>
+<circle cx="300" cy="277.7" r="13" fill="#27272a" stroke="#71717a" class="node"/>
 <text x="300" y="281.7" text-anchor="middle" class="caption">0</text>
-<circle cx="300" cy="349.1" r="13" fill="#334155" stroke="#94a3b8" class="node"/>
+<circle cx="300" cy="349.1" r="13" fill="#27272a" stroke="#71717a" class="node"/>
 <text x="300" y="353.1" text-anchor="middle" class="caption">1</text>
-<circle cx="300" cy="420.6" r="13" fill="#334155" stroke="#94a3b8" class="node"/>
+<circle cx="300" cy="420.6" r="13" fill="#27272a" stroke="#71717a" class="node"/>
 <text x="300" y="424.6" text-anchor="middle" class="caption">2</text>
-<circle cx="300" cy="492.0" r="13" fill="#334155" stroke="#94a3b8" class="node"/>
+<circle cx="300" cy="492.0" r="13" fill="#27272a" stroke="#71717a" class="node"/>
 <text x="300" y="496.0" text-anchor="middle" class="caption">3</text>
-<circle cx="300" cy="563.4" r="13" fill="#334155" stroke="#94a3b8" class="node"/>
+<circle cx="300" cy="563.4" r="13" fill="#27272a" stroke="#71717a" class="node"/>
 <text x="300" y="567.4" text-anchor="middle" class="caption">4</text>
-<circle cx="300" cy="634.9" r="13" fill="#334155" stroke="#94a3b8" class="node"/>
+<circle cx="300" cy="634.9" r="13" fill="#27272a" stroke="#71717a" class="node"/>
 <text x="300" y="638.9" text-anchor="middle" class="caption">5</text>
-<circle cx="300" cy="706.3" r="13" fill="#334155" stroke="#94a3b8" class="node"/>
+<circle cx="300" cy="706.3" r="13" fill="#27272a" stroke="#71717a" class="node"/>
 <text x="300" y="710.3" text-anchor="middle" class="caption">6</text>
 <text x="600" y="139" text-anchor="middle" class="heading">Layer 1 (8)</text>
 <text x="600" y="161" text-anchor="middle" class="caption">tanh</text>
-<circle cx="600" cy="242.0" r="13" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="600" cy="242.0" r="13" fill="#123b3b" stroke="#00ffff" class="node"/>
 <text x="600" y="246.0" text-anchor="middle" class="caption">0</text>
-<circle cx="600" cy="313.4" r="13" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="600" cy="313.4" r="13" fill="#123b3b" stroke="#00ffff" class="node"/>
 <text x="600" y="317.4" text-anchor="middle" class="caption">1</text>
-<circle cx="600" cy="384.9" r="13" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="600" cy="384.9" r="13" fill="#123b3b" stroke="#00ffff" class="node"/>
 <text x="600" y="388.9" text-anchor="middle" class="caption">2</text>
-<circle cx="600" cy="456.3" r="13" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="600" cy="456.3" r="13" fill="#123b3b" stroke="#00ffff" class="node"/>
 <text x="600" y="460.3" text-anchor="middle" class="caption">3</text>
-<circle cx="600" cy="527.7" r="13" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="600" cy="527.7" r="13" fill="#123b3b" stroke="#00ffff" class="node"/>
 <text x="600" y="531.7" text-anchor="middle" class="caption">4</text>
-<circle cx="600" cy="599.1" r="13" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="600" cy="599.1" r="13" fill="#123b3b" stroke="#00ffff" class="node"/>
 <text x="600" y="603.1" text-anchor="middle" class="caption">5</text>
-<circle cx="600" cy="670.6" r="13" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="600" cy="670.6" r="13" fill="#123b3b" stroke="#00ffff" class="node"/>
 <text x="600" y="674.6" text-anchor="middle" class="caption">6</text>
-<circle cx="600" cy="742.0" r="13" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="600" cy="742.0" r="13" fill="#123b3b" stroke="#00ffff" class="node"/>
 <text x="600" y="746.0" text-anchor="middle" class="caption">7</text>
 <text x="900" y="139" text-anchor="middle" class="heading">Layer 2 (6)</text>
 <text x="900" y="161" text-anchor="middle" class="caption">ReLU</text>
-<circle cx="900" cy="313.4" r="13" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="900" cy="313.4" r="13" fill="#123b3b" stroke="#00ffff" class="node"/>
 <text x="900" y="317.4" text-anchor="middle" class="caption">0</text>
-<circle cx="900" cy="384.9" r="13" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="900" cy="384.9" r="13" fill="#123b3b" stroke="#00ffff" class="node"/>
 <text x="900" y="388.9" text-anchor="middle" class="caption">1</text>
-<circle cx="900" cy="456.3" r="13" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="900" cy="456.3" r="13" fill="#123b3b" stroke="#00ffff" class="node"/>
 <text x="900" y="460.3" text-anchor="middle" class="caption">2</text>
-<circle cx="900" cy="527.7" r="13" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="900" cy="527.7" r="13" fill="#123b3b" stroke="#00ffff" class="node"/>
 <text x="900" y="531.7" text-anchor="middle" class="caption">3</text>
-<circle cx="900" cy="599.1" r="13" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="900" cy="599.1" r="13" fill="#123b3b" stroke="#00ffff" class="node"/>
 <text x="900" y="603.1" text-anchor="middle" class="caption">4</text>
-<circle cx="900" cy="670.6" r="13" fill="#1e3a8a" stroke="#60a5fa" class="node"/>
+<circle cx="900" cy="670.6" r="13" fill="#123b3b" stroke="#00ffff" class="node"/>
 <text x="900" y="674.6" text-anchor="middle" class="caption">5</text>
 <text x="1200" y="139" text-anchor="middle" class="heading">Actions (2)</text>
 <text x="1200" y="161" text-anchor="middle" class="caption">sigmoid</text>
-<circle cx="1200" cy="456.3" r="13" fill="#881337" stroke="#fb7185" class="node"/>
+<circle cx="1200" cy="456.3" r="13" fill="#12351f" stroke="#00ff66" class="node"/>
 <text x="1200" y="460.3" text-anchor="middle" class="caption">0</text>
-<circle cx="1200" cy="527.7" r="13" fill="#881337" stroke="#fb7185" class="node"/>
+<circle cx="1200" cy="527.7" r="13" fill="#12351f" stroke="#00ff66" class="node"/>
 <text x="1200" y="531.7" text-anchor="middle" class="caption">1</text>
 <text x="275" y="281.7" text-anchor="end" class="body">Ball dist x</text>
 <text x="275" y="353.1" text-anchor="end" class="body">Ball dist y</text>

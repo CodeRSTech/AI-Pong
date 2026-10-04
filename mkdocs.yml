@@ -10,6 +10,7 @@ theme:
 nav:
   - Home: index.md
   - Architecture: architecture.md
+  - Animation authoring: animation-authoring.md
   - Fitness: fitness.md
   - Training tips: training.md
   - Release 1.4.0: releases/1.4.0.md
