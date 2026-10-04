@@ -12,6 +12,29 @@ AI-Pong uses a genetic algorithm to evolve neural networks that play Pong. Each 
 
 <!-- Demo capture planned: add ![AI-Pong demo](assets/demo.gif) here when a gameplay GIF is recorded. -->
 
+## How it works
+
+Each candidate AI is a fully connected **7 → 8 → 6 → 2** neural network:
+seven normalized game observations enter two hidden layers, and the two
+outputs choose whether to move the paddle left or right. The network uses
+PyTorch; NumPy provides observation and batch-input arrays. Arcade supplies
+the 2D window, event loop, and rendering, while headless training uses the
+same simulation without opening a window.
+
+After each generation, the genetic algorithm ranks players by fitness,
+retains and probabilistically selects survivors, crosses pairs of parents,
+then mutates offspring to form the next population. The current two-point
+crossover swaps a contiguous interval of neurons and associated weights and
+biases between parents, producing reciprocal children; the
+[architecture guide](docs/architecture.md#selection-crossover-and-mutation)
+explains the details and shows the crossover schematic. The
+[fitness guide](docs/fitness.md) describes how candidate players are scored.
+
+<!-- Image placeholders: replace these notes with captured assets when available. -->
+> **Gameplay screenshot placeholder:** Add a capture of the rendered court during training.
+>
+> **Network panel screenshot placeholder:** Add a close view of the live network visualization.
+
 ## Quick start
 
 Requires Python 3.10 or newer. From the repository root:
