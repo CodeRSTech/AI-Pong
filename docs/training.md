@@ -23,7 +23,7 @@ Rendered `src.main` training and `src.tester` playback use synthesized paddle-hi
 ## Rendered generation lifecycle
 
 `python -m src.main` keeps one Arcade window open while it moves through
-generation gameplay, fitness and checkpointing, the elite's 20 visible
+generation gameplay, fitness and checkpointing, the elite's configured visible
 validation scenarios, selection, and reproduction. The window shows the
 current generation and phase; during validation it also shows scenario
 progress, the live score, and the accumulated win/loss/tie record. Closing the
@@ -32,17 +32,26 @@ window interrupts the run without launching another generation. A finite
 
 Validation advances in fixed-delta batches so the rendered suite uses the same
 scenario setup, timing, and metrics as headless validation without blocking
-Arcade's event loop for the entire suite. All 20 scenarios are now played
+Arcade's event loop for the entire suite. All configured scenarios are played
 visibly in rendered runs, so the between-generation portion takes longer than
 headless validation.
 
 ## Checkpoints
 
-Each training run creates a timestamped subdirectory under `runs/` (or the path specified with `--output-dir`). It contains `settings.json`, metrics and validation records, `elite_model.pt`, and top-player checkpoints under `checkpoints/`. Run `python -m src.tester` to load the newest run's elite, or specify a file with `python -m src.tester --checkpoint path\to\model.pt`.
+Each training run creates a timestamped subdirectory under `runs/` (or the path specified with `--output-dir`). It contains `settings.json`, `metrics.csv`, `validation.csv`, `validation_scenarios.jsonl`, `elite_model.pt`, and top-player checkpoints under `checkpoints/`. Metrics and the generation checkpoints, including `elite_model.pt`, are saved after fitness ranking and before validation. The elite file is overwritten each generation with that generation's fitness winner; it is not the best-ever model and may not pass validation. Validation records are appended after the entire scenario suite finishes. See the [1.4.0 release notes](releases/1.4.0.md) for exact fields and timing.
+
+Run `python -m src.tester` to load the newest run directory containing an elite checkpoint, or specify a file with `python -m src.tester --checkpoint path\to\model.pt`. The viewer also accepts `--runs-dir` to change the default search root (`runs`). Existing checkpoints are not used to resume evolution: each training invocation creates a fresh population and a new run directory.
 
 ## Validation target
 
-Every generation's elite is tested in 20 fresh scenarios. Ball and paddle positions and ball direction vary, game duration ranges from 6–18 seconds, and both paddles use a width from 50–120 pixels. The target is at least 95% wins and 90% CPU shutouts. Reaching the target is recorded and shown in green in the rendered `src.main` window; it is informational only, and training continues.
+**Recommended:** use `--validation-games 20` or a higher count when assessing an elite's reliability. The default of 2 is intended for quick developmental feedback; a green indicator from such a small suite is not a robust assessment. Larger suites take longer, especially when rendered, and still do not guarantee performance on every possible scenario.
+
+```console
+python -m src.main --validation-games 20
+python -m src.train --validation-games 20
+```
+
+Every generation's elite is tested in 2 fresh scenarios by default in both training modes. Use `--validation-games 20` (or another positive count) for a larger suite. Ball and paddle positions and ball direction vary, game duration ranges from 6–18 seconds, and both paddles use a width from 50–120 pixels. The target remains at least 95% wins and 90% CPU shutouts. With 2 games, both must be wins and CPU shutouts, and the small sample provides limited evidence of reliability. Reaching the target is recorded and shown in green in the rendered `src.main` window; it is informational only, and training continues.
 
 ## Command-line examples
 

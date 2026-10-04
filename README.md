@@ -6,7 +6,7 @@
 
 AI-Pong uses a genetic algorithm to evolve neural networks that play Pong. Each generation evaluates a population in parallel with batched PyTorch inference; Arcade displays the current population's representative game and network.
 
-**Documentation:** [Read the AI-Pong docs](https://coderstech.github.io/AI-Pong/)
+**Documentation:** [Read the AI-Pong docs](https://coderstech.github.io/AI-Pong/) | [Release 1.4.0 details](docs/releases/1.4.0.md)
 
 > **Demo GIF:** Not captured yet. See the [feature tracker](#feature-tracker) for how to add one.
 
@@ -41,7 +41,9 @@ Run headless training with periodic progress output:
 python -m src.train
 ```
 
-Both commands train continuously until interrupted by `Ctrl+C`; use `--generations` to set a limit. Each generation validates its elite on 20 fresh scenarios. The rendered runner shows a green border once an elite wins at least 95% of scenarios and shuts out the CPU in at least 90%; training continues after that target is reached.
+Both commands train continuously until interrupted by `Ctrl+C`; use `--generations` to set a limit. Each generation validates its elite on 2 fresh scenarios by default; use `--validation-games 20` for a larger suite. The rendered runner shows a green border once an elite wins at least 95% of scenarios and shuts out the CPU in at least 90%; training continues after that target is reached. With only 2 scenarios, both must be wins and CPU shutouts; this small sample is not strong evidence of general reliability.
+
+**For a more informative reliability assessment, use `--validation-games 20` or higher** with either training command. The default of 2 prioritizes quick developmental feedback; larger suites take longer, particularly when rendered.
 
 To watch a saved elite model, run:
 
@@ -50,6 +52,12 @@ python -m src.tester
 ```
 
 Each run creates a timestamped folder under `runs/` containing settings, per-generation metrics, validation results, and checkpoints. Use `python -m src.train --help` or `python -m src.main --help` to see CLI options. `python -m src.tester` loads the latest run's elite; use `--checkpoint` to select a specific model.
+
+The saved elite is overwritten with each generation's fitness winner before
+validation; it is not a best-ever model, guaranteed to meet the validation
+target, or a resumable training checkpoint. Every invocation starts a fresh
+population. See the [1.4.0 release notes](docs/releases/1.4.0.md) for exact
+artifact schemas, CLI defaults, and migration details.
 
 ## Configuration
 

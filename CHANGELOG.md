@@ -4,15 +4,63 @@ Notable project changes are recorded here. This changelog may not include every 
 
 ## Unreleased
 
-- Added a headless/rendered training CLI with configurable population, generations, seed, timeout, output root, and simulation timing.
-- Saved settings, per-generation metrics, and checkpoints in timestamped run directories.
-- Updated the viewer to locate the latest run's elite model or accept an explicit checkpoint path.
-- Improved crossover to always select a non-empty contiguous neuron range and inherit the selected neurons' outgoing weights.
-- Made simulation steps per rendered frame configurable.
-- Added separate rendered and headless training commands, progress updates, and randomized elite validation.
-- Kept rendered training in one responsive Arcade window through fitness, visible elite validation, and reproduction.
-- Refreshed the rendered court and neural-network panel with higher-contrast colors and distinct paddles.
-- Added generated, rate-limited sound effects to rendered games, with a `--no-sound` option.
+No unreleased changes.
+
+## 1.4.0
+
+See the [1.4.0 release notes](docs/releases/1.4.0.md) for CLI details, artifact
+schemas and save timing, migration guidance, and known limitations.
+
+### Training and reproducibility
+
+- Added separate rendered (`python -m src.main`) and headless
+  (`python -m src.train`) training commands with population, generation,
+  random-seed, timeout, output-directory, simulation-rate, CPU-thread, and
+  validation-suite options.
+- Created timestamped per-run directories containing the run configuration,
+  generation metrics, validation summaries and scenarios, the current
+  generation's fitness winner, and the top two generation checkpoints.
+- Added periodic headless progress reports and explicit newest-run or
+  `--checkpoint` selection in `src.tester`.
+- Seeded Python, NumPy, and PyTorch training randomness; validation scenarios
+  are generated per generation and evaluation restores the training RNG state
+  before selection and reproduction.
+- Documented that each invocation starts a fresh population: run artifacts are
+  for inspection and model playback, not a full evolution-resume snapshot.
+
+### Genetic algorithm and simulation
+
+- Corrected crossover inheritance to copy selected contiguous neuron rows and
+  their outgoing weights, with architecture checks and a non-empty interval
+  selected between distinct cut points.
+- Made simulation steps per rendered frame configurable and retained batched
+  PyTorch population inference; fitness calculation and rendered validation
+  advance in bounded batches to keep the window responsive.
+- Added randomized, fixed-step elite validation with win/shutout rates,
+  per-scenario results, and a non-stopping success indicator.
+- Defaulted validation to 2 scenarios in both training modes for faster feedback;
+  `--validation-games` selects a larger suite. The unchanged 95% win/90% shutout
+  targets require two wins and two shutouts at the default count; this small
+  sample is not strong evidence of reliability.
+
+### Rendered experience and lifecycle
+
+- Refreshed the court, paddle contrast, ball visibility, and neural-network
+  panel with a higher-contrast visual palette.
+- Added generated, rate-limited paddle-hit, wall-bounce, and scoring tones to
+  rendered play; `--no-sound` disables them.
+- Kept rendered training in one Arcade window through gameplay, fitness and
+  checkpoints, visible elite validation, selection, crossover, mutation, and
+  the next generation; window close cancels future transitions.
+
+### Project maintenance and documentation
+
+- Added package metadata, development/docs extras, pytest and Ruff settings,
+  CI, Dependabot, issue and pull-request templates, and contributor guidance.
+- Added the MkDocs documentation site and GitHub Pages deployment workflow,
+  with architecture, fitness, coordinate, training, and roadmap guides.
+- Expanded automated coverage for simulation, training, validation, artifacts,
+  crossover, audio, and the continuous rendered lifecycle.
 
 ## 1.3.0
 

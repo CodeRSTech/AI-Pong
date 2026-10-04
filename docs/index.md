@@ -22,5 +22,7 @@ The deployment workflow publishes the documentation on pushes to `main` and can 
 - [Architecture](architecture.md): population evaluation, neural network, simulation, and rendering.
 - [Fitness function](fitness.md): what the genetic algorithm rewards.
 - [Training tips](training.md): timeouts, population size, and mutation.
+- [Release 1.4.0](releases/1.4.0.md): CLI reference, saved-run formats,
+  lifecycle, migration notes, and known limitations.
 - [Coordinate system](coordinates.md): simulation coordinates and Arcade rendering.
 - [Roadmap](ROADMAP.md): current project direction.

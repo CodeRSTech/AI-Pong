@@ -7,7 +7,7 @@ training uses one Arcade window and one event loop for the full lifecycle:
 
 1. Reset population scores and play generation gameplay.
 2. Calculate fitness in small batches, then save metrics and checkpoints.
-3. Play the elite through all 20 fresh validation scenarios in the same window.
+3. Play the elite through the configured fresh validation scenarios in the same window (2 by default).
 4. Keep elites and select other survivors, then cross over, mutate, and restore the configured population.
 5. Begin the next generation without closing or recreating the window.
 
@@ -30,6 +30,11 @@ Each `IndividualPlayer` uses a fully connected `7 → 8 → 6 → 2` neural netw
 `Game` owns one `PlayZone` per player. A game step gathers each player's observations, evaluates the batch, applies actions, and advances the zones. `TIME_OUT` ends an epoch after the configured elapsed duration.
 
 The Arcade window renders only one representative zone alongside its neural-network visualization; the rest of the population continues to be simulated. Use `python -m src.main` for the rendered training runner or `python -m src.train` for headless training with progress logs. Both continue until interrupted unless `--generations` sets a limit.
+
+The gameplay representative is a display choice, not a promise that the
+fitness-ranked elite is being shown. After fitness ranking, the first-ranked
+individual is checkpointed and used for validation; that checkpoint is written
+before validation runs.
 
 Rendering uses a high-contrast dark court with distinct player/CPU paddle colors and a bright ball halo. Court markings, palette, and network-panel styling are draw-only; they do not feed into observations or change simulation state.
 
