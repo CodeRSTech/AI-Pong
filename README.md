@@ -8,7 +8,7 @@ AI-Pong uses a genetic algorithm to evolve neural networks that play Pong. Each 
 
 **Documentation:** [AI-Pong homepage](https://coderstech.github.io/AI-Pong/) | [Read the AI-Pong docs](https://coderstech.github.io/AI-Pong/docs/) | [Release 1.4.0 details](docs/releases/1.4.0.md)
 
-![img.png](img.png)
+![AI-Pong demo](assets/demo.gif)
 
 > **Demo GIF:** Not captured yet. See the [feature tracker](#feature-tracker) for how to add one.
 
@@ -184,15 +184,15 @@ artifact schemas, CLI defaults, and migration details.
 
 Defaults in `src/variables.py`:
 
-| Setting | Default | Description |
-| --- | ---: | --- |
-| `WIDTH` | `476` | Width of the play area, in pixels. |
-| `HEIGHT` | `500` | Height of the play area, in pixels. |
-| `FPS` | `144` | Base Arcade update rate; multiplied by `SPEED` to determine the window update rate. |
-| `TIME_OUT` | `12` | Generation duration in seconds. Use `-1` for an unbounded interactive game. |
-| `SPEED` | `2.5` | Update-rate and paddle movement speed multiplier. |
-| `STEPS_PER_FRAME` | `15` | Simulation steps evaluated on each Arcade update. |
-| `PANEL_WIDTH` | `640` | Width of the neural-network visualization panel. |
+| Setting           | Default | Description                                                                         |
+|-------------------|--------:|-------------------------------------------------------------------------------------|
+| `WIDTH`           |   `476` | Width of the play area, in pixels.                                                  |
+| `HEIGHT`          |   `500` | Height of the play area, in pixels.                                                 |
+| `FPS`             |   `144` | Base Arcade update rate; multiplied by `SPEED` to determine the window update rate. |
+| `TIME_OUT`        |    `12` | Generation duration in seconds. Use `-1` for an unbounded interactive game.         |
+| `SPEED`           |   `2.5` | Update-rate and paddle movement speed multiplier.                                   |
+| `STEPS_PER_FRAME` |    `15` | Simulation steps evaluated on each Arcade update.                                   |
+| `PANEL_WIDTH`     |   `640` | Width of the neural-network visualization panel.                                    |
 
 The approximate simulation workload is `FPS × SPEED × STEPS_PER_FRAME` steps per second; the per-step time increment keeps the timeout in elapsed seconds. Population size, generations, seed, timeout, and timing values can be set from either CLI; see `python -m src.train --help`. Validation randomizes positions and ball direction, game duration (6–18 seconds), and paddle width (50–120 pixels). The GA's elite/crossover rates and mutation settings are defined in `src/ga/ga_core.py` and `src/ga/network.py`.
 
@@ -212,14 +212,14 @@ Install the development extras with `python -m pip install -e ".[dev]"`, then ru
 
 ## Feature tracker
 
-| Feature | Status |
-| --- | --- |
-| Batched population inference and neural-network visualization | Available |
-| High-contrast Arcade court, distinct paddles, and ball visibility effects | Available |
-| Generated paddle-hit, wall-bounce, and scoring sounds in rendered play | Available |
-| Per-run folders with settings, metrics, validation, and checkpoints | Available |
-| Randomized elite validation and ongoing-training success indicator | Available |
-| Gameplay demo GIF | Capture planned |
+| Feature                                                                   | Status          |
+|---------------------------------------------------------------------------|-----------------|
+| Batched population inference and neural-network visualization             | Available       |
+| High-contrast Arcade court, distinct paddles, and ball visibility effects | Available       |
+| Generated paddle-hit, wall-bounce, and scoring sounds in rendered play    | Available       |
+| Per-run folders with settings, metrics, validation, and checkpoints       | Available       |
+| Randomized elite validation and ongoing-training success indicator        | Available       |
+| Gameplay demo GIF                                                         | Available       |
 
 To add the demo, record a short gameplay session (showing both the play area and network panel), trim it to a few seconds, resize/optimize it as a GIF, and save it as `assets/demo.gif`. Then replace the demo-capture comment near the top of this README with an image link to that file.
 
