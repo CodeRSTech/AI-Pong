@@ -10,6 +10,7 @@ theme:
 nav:
   - Home: index.md
   - Architecture: architecture.md
+  - Homepage model demo: web-demo.md
   - Animation authoring: animation-authoring.md
   - Fitness: fitness.md
   - Training tips: training.md

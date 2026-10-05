@@ -51,6 +51,11 @@
         outline-offset: 4px;
       }
 
+      button:focus-visible {
+        outline: 3px solid var(--cyan);
+        outline-offset: 4px;
+      }
+
       .wrap {
         width: min(1120px, calc(100% - 48px));
         margin-inline: auto;
@@ -275,6 +280,12 @@
         box-shadow: 0 0 20px rgb(137 224 174 / 40%);
       }
 
+      .court.live .paddle,
+      .court.live .ball {
+        right: auto;
+        transform: translate(-50%, -50%);
+      }
+
       .ball {
         position: absolute;
         top: 42%;
@@ -312,6 +323,37 @@
       .visual-foot strong {
         color: var(--green);
         font-weight: 500;
+      }
+
+      .demo-controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-top: 1rem;
+        color: var(--muted);
+        font-size: 0.75rem;
+      }
+
+      .demo-controls button {
+        padding: 0.5rem 0.7rem;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        background: var(--surface-raised);
+        color: var(--cyan);
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .demo-controls button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+
+      .demo-error {
+        margin: 0.8rem 0 0;
+        color: var(--muted);
+        font-size: 0.8rem;
       }
 
       .section {
@@ -692,10 +734,10 @@
           </div>
         </div>
 
-        <div class="hero-visual" role="img" aria-label="Decorative illustration of a Pong court and neural network">
+        <div class="hero-visual" data-pong-demo role="group" aria-label="Live saved-model Pong demo" aria-describedby="pong-description">
           <div class="visual-label">
             <span>AI-Pong / game view</span>
-            <span>● training loop</span>
+            <span data-pong-status role="status">Saved model</span>
           </div>
           <div class="court" aria-hidden="true">
             <span class="paddle left"></span>
@@ -704,9 +746,15 @@
             <span class="network-tag">7 → 8 → 6 → 2</span>
           </div>
           <div class="visual-foot">
-            <span>POPULATION <strong>PARALLEL</strong></span>
-            <span>FITNESS <strong>ITERATIVE</strong></span>
+            <span>CPU <strong data-pong-cpu-score>0</strong></span>
+            <span>AI <strong data-pong-ai-score>0</strong></span>
           </div>
+          <div class="demo-controls">
+            <span id="pong-description">Saved model vs CPU. Inference only.</span>
+            <button type="button" data-pong-toggle disabled>Pause demo</button>
+          </div>
+          <p class="demo-error" data-pong-error hidden>Could not load or run the model. Reload to retry.</p>
+          <noscript><p class="demo-error">Enable JavaScript to watch the saved model play.</p></noscript>
         </div>
       </section>
 
@@ -860,5 +908,7 @@ python -m src.main</code></pre>
       <span>AI-Pong · A small experiment in evolutionary learning.</span>
       <a href="https://github.com/CodeRSTech/AI-Pong">CodeRSTech/AI-Pong ↗</a>
     </footer>
+    <script src="./assets/pong-core.js" defer></script>
+    <script src="./assets/pong-demo.js" defer></script>
   </body>
 </html>

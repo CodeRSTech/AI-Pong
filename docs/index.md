@@ -20,6 +20,7 @@ The deployment workflow publishes this documentation under `/AI-Pong/docs/` and 
 ## Guides
 
 - [Architecture](architecture.md): population evaluation, neural network, simulation, and rendering.
+- [Homepage model demo](web-demo.md): browser inference and exporting future checkpoints.
 - [Fitness function](fitness.md): what the genetic algorithm rewards.
 - [Training tips](training.md): timeouts, population size, and mutation.
 - [Release 1.4.0](releases/1.4.0.md): CLI reference, saved-run formats,

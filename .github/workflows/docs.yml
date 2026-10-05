@@ -43,7 +43,12 @@ jobs:
           set -euo pipefail
           test -s index.html
           test -s site/docs/index.html
+          for asset in demo.gif model.json pong-core.js pong-demo.js; do
+            test -s "assets/$asset"
+          done
           cp index.html site/index.html
+          mkdir -p site/assets
+          cp assets/demo.gif assets/model.json assets/pong-core.js assets/pong-demo.js site/assets/
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
