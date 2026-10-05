@@ -1,5 +1,6 @@
 import shutil
 import subprocess
+import sys
 import textwrap
 from pathlib import Path
 
@@ -8,7 +9,7 @@ import pytest
 
 WORKFLOW = Path(__file__).resolve().parents[1] / ".github/workflows/docs.yml"
 pytestmark = pytest.mark.skipif(
-    not shutil.which("bash"),
+    sys.platform == "win32" or not shutil.which("bash"),
     reason="Deployment runs on Linux and requires bash",
 )
 
