@@ -15,7 +15,7 @@ python -m src.main
 
 ## Publishing this site
 
-The deployment workflow publishes the documentation on pushes to `main` and can also be run manually. Before its first run, a repository maintainer must set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**.
+The deployment workflow publishes this documentation under `/AI-Pong/docs/` and the project homepage under `/AI-Pong/` on pushes to `main` or manual dispatch. Before its first run, a repository maintainer must set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**.
 
 ## Guides
 
