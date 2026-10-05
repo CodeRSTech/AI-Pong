@@ -3,96 +3,862 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="AI-Pong evolves neural networks to play Pong with a genetic algorithm.">
-    <title>AI-Pong</title>
+    <meta
+      name="description"
+      content="Explore AI-Pong: a Python project that evolves neural networks to play Pong with a genetic algorithm."
+    >
+    <meta name="theme-color" content="#0b1114">
+    <title>AI-Pong — Teach a network to play</title>
     <style>
       :root {
         color-scheme: dark;
-        font-family: system-ui, sans-serif;
-        background: #101820;
-        color: #f4f7fa;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #0b1114;
+        color: #eef5f3;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        --surface: #121c20;
+        --surface-raised: #172328;
+        --line: #26373d;
+        --muted: #a2b3b5;
+        --cyan: #54d6e8;
+        --green: #89e0ae;
+        --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
       }
 
       body {
-        box-sizing: border-box;
-        display: grid;
-        min-height: 100vh;
+        min-width: 320px;
         margin: 0;
-        padding: 2rem;
-        place-items: center;
-      }
-
-      main {
-        max-width: 42rem;
-        padding: 3rem;
-        border: 1px solid #34424e;
-        border-radius: 1rem;
-        background: #18232d;
-      }
-
-      h1 {
-        margin-top: 0;
-        color: #54d6e8;
-        font-size: clamp(2.5rem, 8vw, 4rem);
-      }
-
-      p {
-        color: #c4d0da;
-        font-size: 1.125rem;
-        line-height: 1.6;
-      }
-
-      nav {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        margin-top: 2rem;
+        background:
+          radial-gradient(ellipse at 80% 4%, rgb(39 115 113 / 14%), transparent 33rem),
+          #0b1114;
       }
 
       a {
+        color: inherit;
+      }
+
+      a:focus-visible {
+        outline: 3px solid var(--cyan);
+        outline-offset: 4px;
+      }
+
+      .wrap {
+        width: min(1120px, calc(100% - 48px));
+        margin-inline: auto;
+      }
+
+      .topbar {
+        display: flex;
+        min-height: 76px;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgb(162 179 181 / 12%);
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        font-family: var(--mono);
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-decoration: none;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 30px;
+        height: 30px;
+        place-items: center;
+        border: 1px solid rgb(84 214 232 / 50%);
+        border-radius: 8px;
+        color: var(--cyan);
+      }
+
+      .top-links {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .top-links a {
+        text-decoration: none;
+      }
+
+      .top-links a:hover,
+      .text-link:hover {
+        color: var(--cyan);
+      }
+
+      .hero {
+        display: grid;
+        min-height: 570px;
+        grid-template-columns: 1.05fr 0.95fr;
+        align-items: center;
+        gap: 3rem;
+        padding-block: 5rem;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        color: var(--green);
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow::before {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--green);
+        box-shadow: 0 0 14px rgb(137 224 174 / 60%);
+        content: "";
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        max-width: 680px;
+        margin-block: 1.2rem;
+        font-size: clamp(3.3rem, 7vw, 6.3rem);
+        letter-spacing: -0.075em;
+        line-height: 0.99;
+      }
+
+      h1 span {
+        color: var(--cyan);
+      }
+
+      .hero-copy > p {
+        max-width: 550px;
+        margin-bottom: 2rem;
+        color: var(--muted);
+        font-size: clamp(1.05rem, 2vw, 1.2rem);
+        line-height: 1.75;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+      }
+
+      .button {
+        display: inline-flex;
+        min-height: 48px;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        padding: 0.75rem 1.1rem;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: var(--surface-raised);
+        font-size: 0.92rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: border-color 150ms ease, transform 150ms ease;
+      }
+
+      .button:hover {
+        transform: translateY(-2px);
+        border-color: var(--cyan);
+      }
+
+      .button.primary {
+        border-color: var(--cyan);
+        background: var(--cyan);
+        color: #071215;
+      }
+
+      .button.primary:hover {
+        border-color: #9beefa;
+        background: #9beefa;
+      }
+
+      .hero-visual {
+        position: relative;
+        padding: 1.1rem;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: linear-gradient(145deg, #142025, #0e171a);
+        box-shadow: 0 28px 80px rgb(0 0 0 / 28%);
+      }
+
+      .visual-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.9rem;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .visual-label span:last-child {
+        color: var(--green);
+      }
+
+      .court {
+        position: relative;
+        display: grid;
+        aspect-ratio: 1.2;
+        place-items: center;
+        overflow: hidden;
+        border: 1px solid #2c454a;
+        border-radius: 5px;
+        background:
+          linear-gradient(90deg, transparent 49.8%, rgb(84 214 232 / 18%) 50%, transparent 50.2%),
+          repeating-linear-gradient(0deg, transparent 0 39px, rgb(162 179 181 / 5%) 40px),
+          #0b1518;
+      }
+
+      .court::before,
+      .court::after {
+        position: absolute;
+        top: 50%;
+        width: 24%;
+        height: 24%;
+        border: 1px solid rgb(84 214 232 / 18%);
+        border-radius: 50%;
+        content: "";
+        transform: translateY(-50%);
+      }
+
+      .court::before {
+        left: -12%;
+      }
+
+      .court::after {
+        right: -12%;
+      }
+
+      .paddle {
+        position: absolute;
+        top: 36%;
+        width: 8px;
+        height: 28%;
+        border-radius: 5px;
+        background: var(--cyan);
+        box-shadow: 0 0 20px rgb(84 214 232 / 45%);
+      }
+
+      .paddle.left {
+        left: 8%;
+      }
+
+      .paddle.right {
+        right: 8%;
+        background: var(--green);
+        box-shadow: 0 0 20px rgb(137 224 174 / 40%);
+      }
+
+      .ball {
+        position: absolute;
+        top: 42%;
+        left: 57%;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #f7f5dc;
+        box-shadow: 0 0 20px rgb(247 245 220 / 60%);
+      }
+
+      .network-tag {
+        position: absolute;
+        right: 1.4rem;
+        bottom: 1.35rem;
+        padding: 0.55rem 0.7rem;
+        border: 1px solid #2c454a;
+        border-radius: 6px;
+        background: #101a1e;
+        color: var(--cyan);
+        font-family: var(--mono);
+        font-size: 0.74rem;
+      }
+
+      .visual-foot {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding-top: 0.9rem;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 0.65rem;
+      }
+
+      .visual-foot strong {
+        color: var(--green);
+        font-weight: 500;
+      }
+
+      .section {
+        padding-block: 5.5rem;
+        border-top: 1px solid rgb(162 179 181 / 12%);
+      }
+
+      .section-heading {
+        max-width: 680px;
+        margin-bottom: 2.2rem;
+      }
+
+      .section-heading h2 {
+        margin-block: 0.8rem;
+        font-size: clamp(2rem, 4vw, 3.2rem);
+        letter-spacing: -0.055em;
+        line-height: 1.1;
+      }
+
+      .section-heading p,
+      .card p,
+      .step p,
+      .quick-copy {
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+      }
+
+      .card {
+        min-height: 218px;
+        padding: 1.4rem;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: linear-gradient(145deg, rgb(23 35 40 / 80%), rgb(16 25 28 / 80%));
+      }
+
+      .card-icon {
+        display: grid;
+        width: 38px;
+        height: 38px;
+        margin-bottom: 1.35rem;
+        place-items: center;
+        border: 1px solid rgb(84 214 232 / 25%);
+        border-radius: 8px;
+        color: var(--cyan);
+        font-family: var(--mono);
+        font-size: 0.82rem;
+      }
+
+      .card h3,
+      .step h3 {
+        margin-bottom: 0.55rem;
+        font-size: 1.04rem;
+      }
+
+      .card p {
+        margin-bottom: 0;
+        font-size: 0.92rem;
+      }
+
+      .workflow {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+      }
+
+      .step {
+        position: relative;
+        min-height: 205px;
+        padding: 1.5rem;
+      }
+
+      .step + .step {
+        border-left: 1px solid var(--line);
+      }
+
+      .step-number {
+        display: block;
+        margin-bottom: 2.1rem;
+        color: var(--green);
+        font-family: var(--mono);
+        font-size: 0.78rem;
+      }
+
+      .step p {
+        margin-bottom: 0;
+        font-size: 0.92rem;
+      }
+
+      .model-strip {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        margin-top: 1rem;
+        padding: 1.15rem 1.4rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #0e171a;
+      }
+
+      .model-strip span {
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
+      .model-strip code {
+        color: var(--cyan);
+        font-family: var(--mono);
+        font-size: 0.94rem;
+      }
+
+      .demo-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+        gap: 2rem;
+      }
+
+      .demo-frame {
+        padding: 0.6rem;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+      }
+
+      .demo-frame img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: 5px;
+      }
+
+      .demo-caption {
+        margin: 0.65rem 0.25rem 0.1rem;
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
+      .text-link {
         display: inline-block;
-        padding: 0.8rem 1rem;
-        border-radius: 0.5rem;
-        background: #54d6e8;
-        color: #101820;
+        margin-top: 0.4rem;
+        color: var(--cyan);
         font-weight: 700;
         text-decoration: none;
       }
 
-      a:focus-visible {
-        outline: 3px solid #fff;
-        outline-offset: 3px;
+      .quick-start {
+        display: grid;
+        grid-template-columns: 0.8fr 1.2fr;
+        align-items: center;
+        gap: 2rem;
+        padding: 2rem;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: linear-gradient(120deg, #142126, #111a1d);
       }
 
-      a.secondary {
-        border: 1px solid #617482;
-        background: transparent;
-        color: #f4f7fa;
+      .quick-start h2 {
+        margin-block: 0.75rem;
+        font-size: clamp(1.8rem, 3vw, 2.5rem);
+        letter-spacing: -0.05em;
       }
 
-      @media (max-width: 36rem) {
-        body {
-          padding: 1rem;
+      .quick-copy {
+        margin-bottom: 0;
+        font-size: 0.95rem;
+      }
+
+      pre {
+        overflow-x: auto;
+        margin: 0;
+        padding: 1.2rem;
+        border: 1px solid #2a3d43;
+        border-radius: 7px;
+        background: #0a1113;
+        color: #d9e5e2;
+        font-family: var(--mono);
+        font-size: 0.82rem;
+        line-height: 1.85;
+      }
+
+      pre span {
+        color: var(--green);
+      }
+
+      .fine-print {
+        max-width: 780px;
+        margin: 1.1rem 0 0;
+        color: #84979a;
+        font-size: 0.82rem;
+        line-height: 1.6;
+      }
+
+      .resource-links {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.8rem;
+      }
+
+      .resource {
+        display: flex;
+        min-height: 82px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.8rem;
+        padding: 1rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        text-decoration: none;
+      }
+
+      .resource span:first-child {
+        font-weight: 700;
+      }
+
+      .resource span:last-child {
+        color: var(--cyan);
+      }
+
+      .resource:hover {
+        border-color: var(--cyan);
+      }
+
+      footer {
+        display: flex;
+        min-height: 86px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        border-top: 1px solid rgb(162 179 181 / 12%);
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      footer a {
+        color: var(--cyan);
+        text-decoration: none;
+      }
+
+      @media (max-width: 800px) {
+        .hero {
+          min-height: auto;
+          grid-template-columns: 1fr;
+          gap: 2.5rem;
+          padding-block: 4rem;
         }
 
-        main {
-          padding: 2rem 1.5rem;
+        .hero-visual {
+          max-width: 540px;
+        }
+
+        .cards {
+          grid-template-columns: 1fr;
+        }
+
+        .card {
+          min-height: 0;
+        }
+
+        .card-icon {
+          margin-bottom: 1rem;
+        }
+
+        .resource-links {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (max-width: 600px) {
+        .wrap {
+          width: min(100% - 32px, 480px);
+        }
+
+        .topbar {
+          min-height: 64px;
+        }
+
+        .top-links {
+          gap: 0.9rem;
+          font-size: 0.8rem;
+        }
+
+        .top-links a:first-child {
+          display: none;
+        }
+
+        .hero {
+          padding-block: 3.25rem;
+        }
+
+        h1 {
+          font-size: clamp(3rem, 17vw, 4.6rem);
+        }
+
+        .section {
+          padding-block: 3.75rem;
+        }
+
+        .workflow,
+        .demo-layout,
+        .quick-start {
+          grid-template-columns: 1fr;
+        }
+
+        .step {
+          min-height: 0;
+        }
+
+        .step + .step {
+          border-top: 1px solid var(--line);
+          border-left: 0;
+        }
+
+        .step-number {
+          margin-bottom: 1rem;
+        }
+
+        .quick-start {
+          gap: 1.4rem;
+          padding: 1.4rem;
+        }
+
+        .resource-links {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+
+        *,
+        *::before,
+        *::after {
+          transition-duration: 0.01ms !important;
         }
       }
     </style>
   </head>
   <body>
-    <main>
-      <h1>AI-Pong</h1>
-      <p>
-        A genetic algorithm evolves neural networks to play Pong. Explore how
-        the simulation, training, and evolutionary process work—or dive into
-        the Python project.
-      </p>
-      <nav aria-label="Project links">
-        <a href="./docs/">Read the documentation</a>
-        <a class="secondary" href="https://github.com/CodeRSTech/AI-Pong">View on GitHub</a>
+    <header class="wrap topbar">
+      <a class="brand" href="./" aria-label="AI-Pong home">
+        <span class="brand-mark" aria-hidden="true">A</span>
+        <span>AI-PONG</span>
+      </a>
+      <nav class="top-links" aria-label="Main navigation">
+        <a href="#how-it-works">How it works</a>
+        <a href="#quick-start">Quick start</a>
+        <a href="https://github.com/CodeRSTech/AI-Pong">GitHub ↗</a>
       </nav>
+    </header>
+
+    <main>
+      <section class="wrap hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <span class="eyebrow">An evolutionary Pong experiment</span>
+          <h1 id="hero-title">Teach a network <span>to play.</span></h1>
+          <p>
+            AI-Pong uses a genetic algorithm to evolve neural networks that
+            learn to rally against a CPU opponent. Watch the population play,
+            inspect the network, and explore the training process.
+          </p>
+          <div class="actions">
+            <a class="button primary" href="./docs/">Explore the documentation <span aria-hidden="true">→</span></a>
+            <a class="button" href="https://github.com/CodeRSTech/AI-Pong">View the Python project <span aria-hidden="true">↗</span></a>
+          </div>
+        </div>
+
+        <div class="hero-visual" role="img" aria-label="Decorative illustration of a Pong court and neural network">
+          <div class="visual-label">
+            <span>AI-Pong / game view</span>
+            <span>● training loop</span>
+          </div>
+          <div class="court" aria-hidden="true">
+            <span class="paddle left"></span>
+            <span class="paddle right"></span>
+            <span class="ball"></span>
+            <span class="network-tag">7 → 8 → 6 → 2</span>
+          </div>
+          <div class="visual-foot">
+            <span>POPULATION <strong>PARALLEL</strong></span>
+            <span>FITNESS <strong>ITERATIVE</strong></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="features-title">
+        <div class="wrap">
+          <div class="section-heading">
+            <span class="eyebrow">Inside the project</span>
+            <h2 id="features-title">A playable window into evolution.</h2>
+            <p>
+              A Python project that brings together neural networks, a genetic
+              algorithm, and a rendered Pong simulation.
+            </p>
+          </div>
+          <div class="cards">
+            <article class="card">
+              <span class="card-icon" aria-hidden="true">NN</span>
+              <h3>Neural network decisions</h3>
+              <p>
+                Seven normalized game observations flow through a fully
+                connected 7 → 8 → 6 → 2 network to select paddle movement.
+              </p>
+            </article>
+            <article class="card">
+              <span class="card-icon" aria-hidden="true">GA</span>
+              <h3>Population-based learning</h3>
+              <p>
+                Players are evaluated, selected, crossed, and mutated to make
+                each new generation. Batched PyTorch inference helps evaluate
+                the population in parallel.
+              </p>
+            </article>
+            <article class="card">
+              <span class="card-icon" aria-hidden="true">↗</span>
+              <h3>Rendered and headless runs</h3>
+              <p>
+                Arcade renders a representative game and network view; the
+                same simulation can also train headlessly and save run metrics
+                and model checkpoints.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="how-it-works" aria-labelledby="workflow-title">
+        <div class="wrap">
+          <div class="section-heading">
+            <span class="eyebrow">The training loop</span>
+            <h2 id="workflow-title">Play. Select. Evolve.</h2>
+            <p>
+              Each generation turns game performance into the next population
+              of candidate players.
+            </p>
+          </div>
+          <div class="workflow">
+            <article class="step">
+              <span class="step-number">01 / PLAY</span>
+              <h3>Evaluate the population</h3>
+              <p>
+                Candidate networks observe the game and choose paddle actions
+                while their fitness is measured.
+              </p>
+            </article>
+            <article class="step">
+              <span class="step-number">02 / SELECT</span>
+              <h3>Keep and combine survivors</h3>
+              <p>
+                The genetic algorithm ranks players, retains survivors, and
+                probabilistically selects parents for crossover.
+              </p>
+            </article>
+            <article class="step">
+              <span class="step-number">03 / EVOLVE</span>
+              <h3>Mutate the next generation</h3>
+              <p>
+                Offspring inherit network parameters, receive mutations, and
+                form the population for another round.
+              </p>
+            </article>
+          </div>
+          <div class="model-strip">
+            <span>Current fully connected network</span>
+            <code>7 observations <span aria-hidden="true">→</span> 8 <span aria-hidden="true">→</span> 6 <span aria-hidden="true">→</span> 2 actions</code>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="demo-title">
+        <div class="wrap demo-layout">
+          <div class="demo-frame">
+            <img src="./assets/demo.gif" alt="AI-Pong gameplay with the Pong court and neural-network visualization">
+            <p class="demo-caption">Project demo · rendered gameplay and network view</p>
+          </div>
+          <div class="section-heading">
+            <span class="eyebrow">See it in action</span>
+            <h2 id="demo-title">Follow the game and the decisions.</h2>
+            <p>
+              The rendered runner displays a population representative alongside
+              a live network visualization. The GIF is a project demo; it is
+              not evidence that a particular model is a trained elite.
+            </p>
+            <a class="text-link" href="./docs/architecture/">Explore the architecture <span aria-hidden="true">→</span></a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="quick-start" aria-labelledby="quick-title">
+        <div class="wrap">
+          <div class="quick-start">
+            <div>
+              <span class="eyebrow">Python 3.10+</span>
+              <h2 id="quick-title">Run your first generation.</h2>
+              <p class="quick-copy">
+                Set up the project, install its dependencies, then start the
+                rendered genetic algorithm.
+              </p>
+            </div>
+            <pre><code><span># Install dependencies</span>
+python -m pip install -r requirements.txt
+
+<span># Start rendered training</span>
+python -m src.main</code></pre>
+          </div>
+          <p class="fine-print">
+            Training continues until interrupted unless a generation limit is
+            set. Validation is an informational signal, not a guarantee of
+            general reliability or a condition that stops training. See the
+            <a href="./docs/training/">training guide</a> for options and
+            validation guidance.
+          </p>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="resources-title">
+        <div class="wrap">
+          <div class="section-heading">
+            <span class="eyebrow">Go deeper</span>
+            <h2 id="resources-title">Explore the project.</h2>
+          </div>
+          <nav class="resource-links" aria-label="Project resources">
+            <a class="resource" href="./docs/architecture/"><span>Architecture</span><span aria-hidden="true">↗</span></a>
+            <a class="resource" href="./docs/fitness/"><span>Fitness guide</span><span aria-hidden="true">↗</span></a>
+            <a class="resource" href="./docs/releases/1.4.0/"><span>Release 1.4.0</span><span aria-hidden="true">↗</span></a>
+            <a class="resource" href="https://github.com/CodeRSTech/AI-Pong"><span>Source on GitHub</span><span aria-hidden="true">↗</span></a>
+          </nav>
+        </div>
+      </section>
     </main>
+
+    <footer class="wrap">
+      <span>AI-Pong · A small experiment in evolutionary learning.</span>
+      <a href="https://github.com/CodeRSTech/AI-Pong">CodeRSTech/AI-Pong ↗</a>
+    </footer>
   </body>
 </html>
