@@ -10,10 +10,6 @@ AI-Pong uses a genetic algorithm to evolve neural networks that play Pong. Each 
 
 ![AI-Pong demo](assets/demo.gif)
 
-> **Demo GIF:** Not captured yet. See the [feature tracker](#feature-tracker) for how to add one.
-
-<!-- Demo capture planned: add ![AI-Pong demo](assets/demo.gif) here when a gameplay GIF is recorded. -->
-
 ## How it works
 
 Each candidate AI is a fully connected **7 → 8 → 6 → 2** neural network:
