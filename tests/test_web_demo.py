@@ -249,7 +249,9 @@ def test_homepage_loads_and_pause_resume_work(browser, web_site, reduced):
       if (status.textContent !== "Live model") throw new Error("Visible game did not resume");
       return {initialStatus, button: button.textContent};
     """.replace("EXPECTED", json.dumps("Paused" if reduced else "Live model"))
-    flags = ["--force-prefers-reduced-motion", "--window-size=390,900"] if reduced else []
+    flags = ["--force-prefers-reduced-motion" if reduced else "--force-prefers-no-reduced-motion"]
+    if reduced:
+        flags.append("--window-size=390,900")
     result = run_browser(browser, web_site, script, homepage=True, flags=flags)
     assert result["button"] == "Pause demo"
 
