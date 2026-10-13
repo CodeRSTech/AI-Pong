@@ -1,25 +1,43 @@
 site_name: AI-Pong
-site_description: Documentation for the AI-Pong genetic algorithm and Pong simulation.
-site_url: https://coderstech.github.io/AI-Pong/docs/
+site_description: Neural-network + genetic algorithm Pong project
 repo_url: https://github.com/CodeRSTech/AI-Pong
 repo_name: CodeRSTech/AI-Pong
 
 theme:
-  name: darkly
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
 
-nav:
-  - Home: index.md
-  - Architecture: architecture.md
-  - Homepage model demo: web-demo.md
-  - Animation authoring: animation-authoring.md
-  - Fitness: fitness.md
-  - Training tips: training.md
-  - Release 1.4.0: releases/1.4.0.md
-  - Coordinates: coordinates.md
-  - Roadmap: ROADMAP.md
+extra_css:
+  - stylesheets/extra.css
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: false
+            docstring_style: google
+            separate_signature: true
+            show_root_heading: true
 
 markdown_extensions:
   - admonition
-  - tables
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
   - toc:
       permalink: true
+
+nav:
+  - Home: index.md
+  - Docs:
+      - Overview: docs-overview.md
+  - API Reference: api/index.md
