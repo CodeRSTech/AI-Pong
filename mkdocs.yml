@@ -53,4 +53,13 @@ nav:
   - Home: index.md
   - Docs:
       - Overview: docs-overview.md
+      - Architecture: architecture.md
+      - Coordinate system: coordinates.md
+      - Fitness: fitness.md
+      - Training: training.md
+      - Web demo: web-demo.md
+      - Animation authoring: animation-authoring.md
+      - Roadmap: ROADMAP.md
+      - Releases:
+          - 1.4.0: releases/1.4.0.md
   - API Reference: api/index.md

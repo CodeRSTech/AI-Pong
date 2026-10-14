@@ -31,7 +31,7 @@ jobs:
       - name: Install documentation dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install mkdocs mkdocs-bootswatch
+          python -m pip install "mkdocs-material>=9.5,<10" "mkdocstrings[python]>=0.24,<1"
 
       - name: Build documentation
         run: |
