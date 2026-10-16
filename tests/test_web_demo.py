@@ -23,9 +23,9 @@ ROOT = Path(__file__).resolve().parents[1]
 def browser():
     candidates = [
         os.environ.get("PONG_TEST_BROWSER"),
+        shutil.which("google-chrome"),
         shutil.which("chromium"),
         shutil.which("chromium-browser"),
-        shutil.which("google-chrome"),
         r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
         r"C:\Program Files\Google\Chrome\Application\chrome.exe",
     ]
@@ -33,6 +33,25 @@ def browser():
         if candidate and Path(candidate).is_file():
             return candidate
     pytest.skip("Browser integration requires an installed Chromium-family browser.")
+
+
+@pytest.mark.parametrize(
+    ("override", "available", "expected"),
+    [
+        (None, ["google-chrome", "chromium", "chromium-browser"], "google-chrome"),
+        ("custom-browser", ["google-chrome", "chromium"], "custom-browser"),
+        (None, ["chromium"], "chromium"),
+        (None, ["chromium-browser"], "chromium-browser"),
+    ],
+)
+def test_browser_selection(monkeypatch, override, available, expected):
+    monkeypatch.delenv("PONG_TEST_BROWSER", raising=False)
+    if override:
+        monkeypatch.setenv("PONG_TEST_BROWSER", override)
+    monkeypatch.setattr(shutil, "which", lambda name: name if name in available else None)
+    monkeypatch.setattr(Path, "is_file", lambda path: str(path) in [override, *available])
+
+    assert browser.__wrapped__() == expected
 
 
 @pytest.fixture
