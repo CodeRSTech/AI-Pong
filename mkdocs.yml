@@ -26,12 +26,15 @@ theme:
 extra_css:
   - stylesheets/extra.css
 
+hooks:
+  - scripts/docs_reference.py
+
 plugins:
   - search
   - mkdocstrings:
       handlers:
         python:
-          paths: [src]
+          paths: [.]
           load_external_modules: false
           options:
             allow_inspection: false

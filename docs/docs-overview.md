@@ -18,6 +18,6 @@ AI-Pong evolves neural networks with a genetic algorithm and uses Pong simulatio
 
 ## Reference
 
-The [API reference](api/index.md) is generated from the core Python modules with mkdocstrings.
+The [API reference](reference/api/index.md) is generated from the core Python modules with mkdocstrings.
 
 For setup instructions and a short project introduction, see the [home page](index.md).
