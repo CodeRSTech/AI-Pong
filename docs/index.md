@@ -13,9 +13,9 @@ python -m src.main
 
 `python -m src.main` opens the rendered training runner. For headless runs with periodic progress reports, use `python -m src.train`. Both run continuously until interrupted unless `--generations` sets a limit. To view the most recently saved elite model, run `python -m src.tester`.
 
-## Publishing this site
+???+ info "Publishing this site"
 
-The deployment workflow publishes this documentation under `/AI-Pong/docs/` and the project homepage under `/AI-Pong/` on pushes to `main` or manual dispatch. Before its first run, a repository maintainer must set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**.
+    The deployment workflow publishes this documentation under `/AI-Pong/docs/` and the project homepage under `/AI-Pong/` on pushes to `main` or manual dispatch. Before its first run, a repository maintainer must set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**.
 
 ## Guides
 

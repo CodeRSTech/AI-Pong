@@ -60,15 +60,16 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Docs:
+  - Overview:
       - Overview: docs-overview.md
       - Architecture: architecture.md
-      - Coordinate system: coordinates.md
-      - Fitness: fitness.md
-      - Training: training.md
-      - Web demo: web-demo.md
-      - Animation authoring: animation-authoring.md
       - Roadmap: ROADMAP.md
       - Releases:
-          - 1.4.0: releases/1.4.0.md
+        - 1.4.0: releases/1.4.0.md
+  - Guides:
+      - Training: training.md
+      - Web demo: web-demo.md
+  - Components:
+      - Coordinate system: coordinates.md
+      - Fitness: fitness.md
   - API Reference: api/index.md

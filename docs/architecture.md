@@ -19,8 +19,9 @@ cancels an in-progress validation and prevents another generation from
 starting. Headless training runs the same simulation synchronously without a
 window.
 
-The default population is 200. Training continues until interrupted unless
-`--generations` sets a limit.
+???+ tip "Population size and duration"
+   The default population is 200. Training continues until interrupted unless
+   `--generations` sets a limit.
 
 ### Selection, crossover, and mutation
 
@@ -43,16 +44,6 @@ reverses the parent roles. This is a neuron-level crossover, not a raw slice
 through the flattened weight tensors.
 
 ![Two-point crossover inheritance. Node colors show the parent supplying each neuron's bias; edge colors show the parent supplying each weight. The strip shows the exact concatenated output-neuron interval.](images/two-point-crossover.svg)
-
-### Crossover animation
-
-<video controls playsinline preload="none" width="100%" poster="../images/two-point-crossover.svg" aria-label="Two-point crossover parameter inheritance animation">
-  <source src="../images/animations/two-point-crossover.mp4" type="video/mp4">
-  Your browser does not support embedded video. Use the download link below.
-</video>
-
-[Watch or download the crossover animation](images/animations/two-point-crossover.mp4).
-The static diagram above remains available without video playback.
 
 The clip highlights the half-open interval `[3, 12)` in the ordered list of
 layer-output neurons, separates copied segments, transports the donor segments
@@ -81,16 +72,6 @@ above 0.5 activate the corresponding **Left** or **Right** action.
 
 ![The current network topology, input labels, layer sizes, and activations.](images/neural-network.svg)
 
-### Neural-network animation
-
-<video controls playsinline preload="none" width="100%" poster="../images/neural-network.svg" aria-label="Neural-network observations, forward pass, and paddle action animation">
-  <source src="../images/animations/neural-network.mp4" type="video/mp4">
-  Your browser does not support embedded video. Use the download link below.
-</video>
-
-[Watch or download the network animation](images/animations/neural-network.mp4).
-The static diagram above remains available without video playback.
-
 The clip carries seven illustrative normalized inputs into the network, focuses
 on an actual neuron's weighted contributions, bias, sum and activation, and then
 propagates signals through the actual PyTorch model. Positive values are blue,
@@ -106,10 +87,10 @@ neither active output, result in no movement.
 The three additional Manim scenes are driven by one validated gameplay-trace
 JSON file and one explicitly selected decision index:
 
-| Scene | Recorded information explained |
-| --- | --- |
-| `observations` | The y-down court state and the seven observation formulas, with the actual input vector. |
-| `network-actions` | That same input, checkpoint activations and signed weights, and the actual two sigmoid decisions. |
+| Scene               | Recorded information explained                                                                                               |
+|---------------------|------------------------------------------------------------------------------------------------------------------------------|
+| `observations`      | The y-down court state and the seven observation formulas, with the actual input vector.                                     |
+| `network-actions`   | That same input, checkpoint activations and signed weights, and the actual two sigmoid decisions.                            |
 | `actions-execution` | The matching action, measured paddle displacement, legal center bounds, CPU movement, and subsequent recorded states/events. |
 
 These are independent modules rather than clips spliced from separate episodes.
@@ -199,16 +180,15 @@ After reviewing the preview, render the same selected decision at final quality:
 .\.venv\Scripts\python.exe -m scripts.render_animations --scenes observations network-actions actions-execution --trace D:\animation-work\gameplay-trace.json --decision-index 12 --quality h --output-dir D:\animation-work\final
 ```
 
-The model is implemented with PyTorch `nn.Linear` layers. For population
-inference, `BatchedPopulationBrain` stacks the individuals' weights and
+The model is implemented with PyTorch's `nn.Linear` layers. 
+`BatchedPopulationBrain` stacks the individuals' weights and
 biases, then evaluates them together using batched matrix multiplication.
 This lets one forward pass evaluate all players at each simulation step.
 PyTorch uses CUDA when available and otherwise runs on the CPU.
 
-NumPy is Python's array and numerical-computing library; here it is used for
-reusable observation and population-input arrays, as well as helpers such as
-the fitness function's squashing operation. PyTorch—not NumPy—stores and
-evaluates the neural-network parameters.
+`NumPy` is used for arrays, helpers such as
+the fitness function's squashing operation while `PyTorch` stores and
+evaluates the neural-net params.
 
 ## Arcade, simulation, and rendering
 
@@ -254,27 +234,3 @@ python -m scripts.generate_diagrams
 The script rewrites `docs/images/neural-network.svg` and
 `docs/images/two-point-crossover.svg`. Keep the generated files checked in so
 the documentation renders without running the generator during site builds.
-
-### Regenerating the animations
-
-Manim is optional authoring tooling: training, SVG generation, tests of the
-animation data, and documentation builds do not require it. Install it in
-the environment used for rendering:
-
-```console
-python -m pip install manim
-python -m scripts.render_animations
-```
-
-On Windows, if Manim is installed in the project's virtual environment, use
-`.\.venv\Scripts\python.exe -m scripts.render_animations`.
-The renderer uses ordinary text rather than TeX, so these scenes do not
-require LaTeX. It selects installed Fira Code when available and otherwise
-prints that it is using the installed Consolas monospace fallback; fonts are
-not installed or bundled by the renderer.
-
-The command writes `neural-network.mp4` and `two-point-crossover.mp4` beneath
-`docs/images/animations/`, using a temporary directory for intermediate
-render files. Its default is 480p at 15 fps; use `--quality m` for 720p at
-30 fps or `--quality h` for 1080p at 60 fps. Commit the finished clips so
-GitHub Pages can serve them without installing Manim or rendering scenes.
