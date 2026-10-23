@@ -233,7 +233,9 @@ def test_homepage_loads_and_pause_resume_work(browser, web_site, reduced):
       await wait();
       if (button.disabled) throw new Error("Model did not load: " + status.textContent);
       const initialStatus = status.textContent;
-      if (initialStatus !== EXPECTED) throw new Error("Unexpected startup: " + initialStatus);
+      const expectedStatus = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "Paused" : "Live model";
+      if (initialStatus !== expectedStatus) throw new Error("Unexpected startup: " + initialStatus);
       if (initialStatus === "Live model") button.click();
       if (status.textContent !== "Paused") throw new Error("Pause failed");
       const before = demo.querySelector(".ball").getAttribute("style");
@@ -268,7 +270,7 @@ def test_homepage_loads_and_pause_resume_work(browser, web_site, reduced):
       await wait();
       if (status.textContent !== "Live model") throw new Error("Visible game did not resume");
       return {initialStatus, button: button.textContent};
-    """.replace("EXPECTED", json.dumps("Paused" if reduced else "Live model"))
+    """
     flags = ["--force-prefers-reduced-motion", "--window-size=390,900"] if reduced else []
     result = run_browser(browser, web_site, script, homepage=True, flags=flags)
     assert result["button"] == "Pause demo"
