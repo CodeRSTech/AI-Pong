@@ -23,9 +23,10 @@ ROOT = Path(__file__).resolve().parents[1]
 def browser():
     candidates = [
         os.environ.get("PONG_TEST_BROWSER"),
+        # Prefer Chrome's working sandbox on Ubuntu runners.
+        shutil.which("google-chrome"),
         shutil.which("chromium"),
         shutil.which("chromium-browser"),
-        shutil.which("google-chrome"),
         r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
         r"C:\Program Files\Google\Chrome\Application\chrome.exe",
     ]
@@ -33,6 +34,25 @@ def browser():
         if candidate and Path(candidate).is_file():
             return candidate
     pytest.skip("Browser integration requires an installed Chromium-family browser.")
+
+
+@pytest.mark.parametrize(("override", "available", "expected"), [
+    (None, ["google-chrome", "chromium", "chromium-browser"], "google-chrome"),
+    ("custom-browser", ["google-chrome", "chromium"], "custom-browser"),
+    (None, ["chromium", "chromium-browser"], "chromium"),
+    (None, ["chromium-browser"], "chromium-browser"),
+])
+def test_browser_selection(monkeypatch, tmp_path, request, override, available, expected):
+    paths = {}
+    for name in [*available, *([override] if override else [])]:
+        path = tmp_path / name
+        path.touch()
+        paths[name] = str(path)
+    monkeypatch.setattr(shutil, "which", paths.get)
+    monkeypatch.delenv("PONG_TEST_BROWSER", raising=False)
+    if override:
+        monkeypatch.setenv("PONG_TEST_BROWSER", paths[override])
+    assert request.getfixturevalue("browser") == paths[expected]
 
 
 @pytest.fixture
