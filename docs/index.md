@@ -19,7 +19,7 @@ python -m src.main
 
 ## Guides
 
-- [Architecture](architecture.md): population evaluation, neural network, simulation, and rendering.
+- [Architecture](architecture/index.md): population evaluation, neural network, simulation, and rendering.
 - [Homepage model demo](web-demo.md): browser inference and exporting future checkpoints.
 - [Fitness function](fitness.md): what the genetic algorithm rewards.
 - [Training tips](training.md): timeouts, population size, and mutation.

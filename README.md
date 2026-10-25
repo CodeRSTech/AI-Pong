@@ -24,13 +24,13 @@ retains and probabilistically selects survivors, crosses pairs of parents,
 then mutates offspring to form the next population. The current two-point
 crossover swaps a contiguous interval of neurons and associated weights and
 biases between parents, producing reciprocal children; the
-[architecture guide](docs/architecture.md#selection-crossover-and-mutation)
+[architecture guide](docs/architecture/genetic-algorithm.md#selection-crossover-and-mutation)
 explains the details and shows the crossover schematic. The
 [fitness guide](docs/fitness.md) describes how candidate players are scored.
 
 ![Diagram of the current neural network, generated from the model definition.](docs/images/neural-network.svg)
 
-The [architecture guide](docs/architecture.md) includes a source-driven
+The [architecture guide](docs/architecture/genetic-algorithm.md) includes a source-driven
 crossover diagram. Regenerate both diagrams from the repository root with
 `python -m scripts.generate_diagrams`.
 
@@ -78,7 +78,7 @@ reliability evaluation. A suitable trained demonstration is not assumed imminent
 the reported two-hour run still scored below the CPU. Training time does not
 guarantee a strong or optimal player. The tooling is ready, but the three
 trained-game clips and their embedded assets remain deferred. Follow the
-[future checkpoint-to-animation workflow](docs/architecture.md#future-checkpoint-to-animation-workflow)
+[future checkpoint-to-animation workflow](docs/architecture/animation-pipeline.md#future-checkpoint-to-animation-workflow)
 when a model and its evaluation evidence are available; it covers preservation,
 provenance, capture settings, preview review and final rendering.
 Temporary seeded checkpoints
@@ -117,11 +117,11 @@ is necessarily the fitness winner. This lifecycle animation is planned, not
 delivered.
 
 **Animated explanations:** watch the
-[network forward pass](https://coderstech.github.io/AI-Pong/docs/architecture/#neural-network-animation)
-and [two-point crossover](https://coderstech.github.io/AI-Pong/docs/architecture/#crossover-animation)
+[network forward pass](https://coderstech.github.io/AI-Pong/docs/architecture/neural-network/#modular-gameplay-explanations)
+and [two-point crossover](https://coderstech.github.io/AI-Pong/docs/architecture/genetic-algorithm/#selection-crossover-and-mutation)
 in the architecture guide. These are illustrative, source-driven examples,
 not footage of a trained elite. See the
-[rendering instructions](docs/architecture.md#regenerating-the-animations)
+[rendering instructions](docs/architecture/animation-pipeline.md#regenerating-the-diagrams)
 to regenerate the clips with optional Manim tooling.
 
 <!-- Image placeholders: replace these notes with captured assets when available. -->

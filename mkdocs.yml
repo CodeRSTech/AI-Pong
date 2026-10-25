@@ -65,13 +65,22 @@ nav:
   - Home: index.md
   - Overview:
       - Overview: docs-overview.md
-      - Architecture: architecture.md
+      - Architecture:
+          - Overview: architecture/index.md
+          - Genetic algorithm: architecture/genetic-algorithm.md
+          - Neural network: architecture/neural-network.md
+          - Simulation and rendering: architecture/simulation-rendering.md
+          - Animation pipeline: architecture/animation-pipeline.md
       - Roadmap: ROADMAP.md
       - Releases:
         - 1.4.0: releases/1.4.0.md
   - Guides:
       - Training: training.md
       - Web demo: web-demo.md
+  - Development:
+      - Development: development/development.md
+      - Documentation style: development/documentation-style.md
+      - Defensive guards: development/defensive-guards.md
   - Components:
       - Coordinate system: coordinates.md
       - Fitness: fitness.md
