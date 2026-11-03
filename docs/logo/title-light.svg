@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 90" width="100%" height="100%" style="font-family:&#39;Inter&#39;, -apple-system, BlinkMacSystemFont, &#39;Segoe UI&#39;, Roboto, sans-serif;">
+  <defs>
+    <!-- Cyan Glow for Dark Mode -->
+    <filter id="aiTitleGlowDark" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4.5" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <linearGradient id="aiGradDark" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#00f2fe" />
+    </linearGradient>
+  </defs>
+
+  <!-- Title Text -->
+  <text x="10" y="65" font-size="60" font-weight="900" fill="#f8fafc" letter-spacing="4">
+    <tspan fill="url(#aiGradDark)" filter="url(#aiTitleGlowDark)">AI</tspan> PONG
+  </text>
+</svg>
