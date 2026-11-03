@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="100%" height="100%" style="background:#090b14; font-family:&#39;Inter&#39;, -apple-system, BlinkMacSystemFont, &#39;Segoe UI&#39;, Roboto, sans-serif;">
+  <defs>
+    <linearGradient id="iconBorderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#818cf8" />
+      <stop offset="100%" stop-color="#34d399" />
+    </linearGradient>
+
+    <linearGradient id="iconNodeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#a855f7" />
+    </linearGradient>
+
+    <filter id="iconGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Icon Outer Container -->
+  <rect x="18" y="18" width="220" height="220" rx="44" fill="#0b1120" stroke="url(#iconBorderGrad)" stroke-width="2.5" />
+
+  <!-- Embedded Synapses in Background -->
+  <g opacity="0.3" stroke="url(#iconNodeGrad)" stroke-width="1.2">
+    <line x1="48" y1="58" x2="128" y2="128" />
+    <line x1="208" y1="58" x2="128" y2="128" />
+    <line x1="48" y1="198" x2="128" y2="128" />
+    <line x1="208" y1="198" x2="128" y2="128" />
+    <line x1="48" y1="58" x2="208" y2="198" />
+    <line x1="48" y1="198" x2="208" y2="58" />
+  </g>
+
+  <!-- Node Vertices at 4 Quadrants and Center -->
+  <g opacity="0.6">
+    <circle cx="48" cy="58" r="4" fill="#38bdf8" />
+    <circle cx="208" cy="58" r="4" fill="#38bdf8" />
+    <circle cx="48" cy="198" r="4" fill="#34d399" />
+    <circle cx="208" cy="198" r="4" fill="#34d399" />
+    <circle cx="128" cy="128" r="5" fill="#a855f7" filter="url(#iconGlow)" />
+  </g>
+
+  <!-- 2x2 Grid Text: P O / N G -->
+  <g font-size="52" font-weight="900" text-anchor="middle">
+    <!-- Top Row: P O -->
+    <text x="84" y="104" fill="#f8fafc">P</text>
+    <text x="172" y="104" fill="#38bdf8" filter="url(#iconGlow)">O</text>
+
+    <!-- Bottom Row: N G -->
+    <text x="84" y="174" fill="#f8fafc">N</text>
+    <text x="172" y="174" fill="#34d399" filter="url(#iconGlow)">G</text>
+  </g>
+
+  <!-- Subtle Corner Signal Node -->
+  <circle cx="206" cy="50" r="3" fill="#ffffff" filter="url(#iconGlow)" />
+</svg>
