@@ -23,9 +23,10 @@ ROOT = Path(__file__).resolve().parents[1]
 def browser():
     candidates = [
         os.environ.get("PONG_TEST_BROWSER"),
+        # Prefer Chrome's working sandbox on Ubuntu runners.
+        shutil.which("google-chrome"),
         shutil.which("chromium"),
         shutil.which("chromium-browser"),
-        shutil.which("google-chrome"),
         r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
         r"C:\Program Files\Google\Chrome\Application\chrome.exe",
     ]
@@ -33,6 +34,25 @@ def browser():
         if candidate and Path(candidate).is_file():
             return candidate
     pytest.skip("Browser integration requires an installed Chromium-family browser.")
+
+
+@pytest.mark.parametrize(("override", "available", "expected"), [
+    (None, ["google-chrome", "chromium", "chromium-browser"], "google-chrome"),
+    ("custom-browser", ["google-chrome", "chromium"], "custom-browser"),
+    (None, ["chromium", "chromium-browser"], "chromium"),
+    (None, ["chromium-browser"], "chromium-browser"),
+])
+def test_browser_selection(monkeypatch, tmp_path, request, override, available, expected):
+    paths = {}
+    for name in [*available, *([override] if override else [])]:
+        path = tmp_path / name
+        path.touch()
+        paths[name] = str(path)
+    monkeypatch.setattr(shutil, "which", paths.get)
+    monkeypatch.delenv("PONG_TEST_BROWSER", raising=False)
+    if override:
+        monkeypatch.setenv("PONG_TEST_BROWSER", paths[override])
+    assert request.getfixturevalue("browser") == paths[expected]
 
 
 @pytest.fixture
@@ -213,7 +233,9 @@ def test_homepage_loads_and_pause_resume_work(browser, web_site, reduced):
       await wait();
       if (button.disabled) throw new Error("Model did not load: " + status.textContent);
       const initialStatus = status.textContent;
-      if (initialStatus !== EXPECTED) throw new Error("Unexpected startup: " + initialStatus);
+      const expectedStatus = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "Paused" : "Live model";
+      if (initialStatus !== expectedStatus) throw new Error("Unexpected startup: " + initialStatus);
       if (initialStatus === "Live model") button.click();
       if (status.textContent !== "Paused") throw new Error("Pause failed");
       const before = demo.querySelector(".ball").getAttribute("style");
@@ -248,7 +270,7 @@ def test_homepage_loads_and_pause_resume_work(browser, web_site, reduced):
       await wait();
       if (status.textContent !== "Live model") throw new Error("Visible game did not resume");
       return {initialStatus, button: button.textContent};
-    """.replace("EXPECTED", json.dumps("Paused" if reduced else "Live model"))
+    """
     flags = ["--force-prefers-reduced-motion", "--window-size=390,900"] if reduced else []
     result = run_browser(browser, web_site, script, homepage=True, flags=flags)
     assert result["button"] == "Pause demo"

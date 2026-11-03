@@ -7,12 +7,12 @@ This roadmap summarizes the project's planned work. Priorities may change as the
 | 0 | Foundation: packaging, tests, and CI | Complete | [CI workflow](https://github.com/CodeRSTech/AI-Pong/blob/main/.github/workflows/ci.yml) |
 | 1 | Documentation and repository hygiene | Complete | [Contributing](https://github.com/CodeRSTech/AI-Pong/blob/main/CONTRIBUTING.md) |
 | 2 | Reproducible runs, correctness, and a training CLI | Complete | [Training tips](training.md) |
-| 3 | Arcade visuals and effects | Complete | [Architecture](architecture.md) |
-| 4 | Sound effects | Complete | [Architecture](architecture.md) |
+| 3 | Arcade visuals and effects | Complete | [Architecture](architecture/simulation-rendering.md) |
+| 4 | Sound effects | Complete | [Architecture](architecture/simulation-rendering.md) |
 | 5 | Lightweight browser demo | Planned | [README feature tracker](https://github.com/CodeRSTech/AI-Pong#feature-tracker) |
 | 6 | Release process and distribution | Planned | [Changelog](https://github.com/CodeRSTech/AI-Pong/blob/main/CHANGELOG.md) |
 
-The evolutionary design and current gameplay rules are described in the [architecture](architecture.md) and [fitness](fitness.md) guides. Proposed changes should be discussed in an issue before substantial work begins.
+The evolutionary design and current gameplay rules are described in the [architecture](architecture/index.md) and [fitness](fitness.md) guides. Proposed changes should be discussed in an issue before substantial work begins.
 
 ## Follow-up issue candidates
 

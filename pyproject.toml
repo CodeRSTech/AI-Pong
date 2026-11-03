@@ -8,7 +8,7 @@ dependencies = ["arcade", "numpy", "loguru", "torch", "torchvision"]
 
 [project.optional-dependencies]
 dev = ["pytest", "pytest-cov", "ruff"]
-docs = ["mkdocs-material>=9.5,<10", "mkdocstrings[python]>=0.24,<1", "pymdown-extensions>=10.2,<12.2"]
+docs = ["mkdocs-material>=9.5,<10", "mkdocstrings[python]>=0.24,<1", "pymdown-extensions>=10.2,<12.4"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
