@@ -71,6 +71,7 @@
 
       .brand {
         display: inline-flex;
+        flex-shrink: 0;
         align-items: center;
         gap: 0.7rem;
         font-family: var(--mono);
@@ -83,10 +84,17 @@
       .brand-logo,
       .brand-title {
         display: block;
+        flex-shrink: 0;
         width: auto;
-        height: auto;
-        max-height: 50px;
-        max-width: 100%;
+        height: 44px;
+      }
+
+      .brand-logo {
+        aspect-ratio: 1 / 1;
+      }
+
+      .brand-title {
+        aspect-ratio: 4 / 1;
       }
 
       .top-links {
@@ -639,6 +647,11 @@
 
         .topbar {
           min-height: 64px;
+        }
+
+        .brand-logo,
+        .brand-title {
+          height: 32px;
         }
 
         .top-links {
