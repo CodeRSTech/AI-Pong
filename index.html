@@ -80,14 +80,13 @@
         text-decoration: none;
       }
 
-      .brand-mark {
-        display: grid;
-        width: 30px;
-        height: 30px;
-        place-items: center;
-        border: 1px solid rgb(84 214 232 / 50%);
-        border-radius: 8px;
-        color: var(--cyan);
+      .brand-logo,
+      .brand-title {
+        display: block;
+        width: auto;
+        height: auto;
+        max-height: 50px;
+        max-width: 100%;
       }
 
       .top-links {
@@ -708,8 +707,8 @@
   <body>
     <header class="wrap topbar">
       <a class="brand" href="./" aria-label="AI-Pong home">
-        <span class="brand-mark" aria-hidden="true">A</span>
-        <span>AI-PONG</span>
+        <img class="brand-logo" src="/AI-Pong/docs/logo/logo.svg" alt="" aria-hidden="true">
+        <img class="brand-title" src="/AI-Pong/docs/logo/title-dark.svg" alt="AI-PONG">
       </a>
       <nav class="top-links" aria-label="Main navigation">
         <a href="#how-it-works">How it works</a>
